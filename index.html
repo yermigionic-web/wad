@@ -949,8 +949,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: calc(46px + var(--safe-t));
-    padding: calc(8px + var(--safe-t)) 52px 8px;
+    min-height: calc(58px + var(--safe-t));
+    padding: calc(12px + var(--safe-t)) 58px 10px;
     background: #0A0C0E;
     border-bottom: 1px solid rgba(140, 118, 76, 0.35);
     font-family: var(--caps);
@@ -958,15 +958,41 @@
     font-size: 10px;
     color: var(--brass);
   }
-  .sheet-close {
+  #sheet-close {
     position: absolute;
-    left: 4px;
-    top: calc(6px + var(--safe-t));
-    width: 44px;
-    height: 36px;
+    z-index: 3;
+    left: 8px;
+    top: calc(8px + var(--safe-t));
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
     font-family: var(--caps);
-    font-size: 18px;
-    color: var(--ink);
+    font-size: 32px;
+    line-height: 1;
+    color: #E9FFFC;
+    text-shadow:
+      0 0 6px rgba(150, 255, 244, 0.95),
+      0 0 14px rgba(70, 220, 210, 0.72);
+  }
+  #sheet-close::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(130, 245, 232, 0.72) 0%, rgba(30, 160, 150, 0.28) 42%, rgba(30, 77, 84, 0) 72%);
+    filter: blur(7px);
+    pointer-events: none;
+  }
+  #stage[data-climate="dry"] #sheet-close {
+    color: #FFF1E4;
+    text-shadow:
+      0 0 6px rgba(255, 186, 110, 0.95),
+      0 0 14px rgba(220, 110, 40, 0.7);
+  }
+  #stage[data-climate="dry"] #sheet-close::before {
+    background: radial-gradient(circle, rgba(255, 176, 90, 0.7) 0%, rgba(184, 92, 32, 0.28) 42%, rgba(143, 67, 41, 0) 72%);
   }
   .sheet-body {
     flex: 1;
@@ -1763,7 +1789,7 @@
               <div class="lever-ruler" aria-hidden="true"></div>
               <div class="lever-stage">
                 <div class="scale-pan scale-wet" aria-hidden="true">
-                  <svg class="scale-svg" viewBox="0 0 160 112">
+                  <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="wetMetal" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0" stop-color="#6A7278"/>
@@ -1783,8 +1809,8 @@
                         <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.9"/>
                         <stop offset="1" stop-color="#F7FAFB" stop-opacity="0"/>
                       </linearGradient>
-                      <clipPath id="wetPanClip">
-                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      <clipPath id="wetWeightClip">
+                        <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z"/>
                       </clipPath>
                       <filter id="wetGrain" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
                         <feTurbulence type="fractalNoise" baseFrequency="0.025 0.95" numOctaves="2" seed="4" stitchTiles="stitch" result="brush"/>
@@ -1804,33 +1830,23 @@
                         <feBlend in="SourceGraphic" in2="veil" mode="soft-light"/>
                       </filter>
                     </defs>
-                    <g fill="none" stroke="#A7B0B6" stroke-width="0.7" stroke-linecap="square">
-                      <circle cx="80" cy="6" r="2.4"/>
-                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    <g class="scale-bow" fill="none" stroke="#C5CCD1" stroke-width="0.85" opacity="0.34">
+                      <circle cx="80" cy="14" r="2.15"/>
+                      <path d="M80 16.2 V31"/>
+                      <path d="M64 44 A 16 13 0 0 0 96 44"/>
                     </g>
-                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#0C0E10"/>
-                    <g clip-path="url(#wetPanClip)">
-                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#wetMetal)" filter="url(#wetGrain)"/>
-                      <rect class="silver-sheen" x="8" y="52" width="22" height="46" fill="url(#wetSheen)"/>
-                      <path d="M28 90 Q80 100 132 90" stroke="#1E4D54" stroke-width="1.1" fill="none" opacity="0.7"/>
-                      <g fill="#D5DCE0">
-                        <circle cx="36" cy="88" r="0.7" opacity="0.8"/>
-                        <circle cx="52" cy="92" r="0.9" opacity="0.55"/>
-                        <circle cx="108" cy="91" r="0.8" opacity="0.6"/>
-                        <circle cx="124" cy="86" r="0.6" opacity="0.75"/>
-                      </g>
+                    <path d="M68 47 H92 V57 L116 73 L122 107 H38 L44 73 L68 57 Z" fill="#0C0E10"/>
+                    <g clip-path="url(#wetWeightClip)">
+                      <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="url(#wetMetal)" filter="url(#wetGrain)"/>
+                      <rect class="silver-sheen" x="58" y="58" width="16" height="40" fill="url(#wetSheen)"/>
+                      <path d="M52 96 H108" stroke="#1E4D54" stroke-width="1" fill="none" opacity="0.65"/>
+                      <path d="M54 78 H106 M50 98 H110" fill="none" stroke="#5E686F" stroke-width="0.45" opacity="0.55"/>
                     </g>
-                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#C5CCD1" stroke-width="0.7"/>
-                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5E686F" stroke-width="0.45"/>
-                    <g stroke="#8E989F" stroke-width="0.6">
-                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
-                    </g>
-                    <circle cx="24" cy="66" r="1.3" fill="#C5CCD1"/>
-                    <circle cx="136" cy="66" r="1.3" fill="#C5CCD1"/>
-                    <g filter="url(#wetFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
-                      <text x="80.6" y="80.2" fill="#14181B" textLength="96" lengthAdjust="spacing">WET</text>
-                      <text x="80" y="79.2" fill="url(#wetType)" textLength="96" lengthAdjust="spacing">WET</text>
-                      <text x="80" y="79.2" fill="none" stroke="#F4F7F8" stroke-width="0.35" opacity="0.45" textLength="96" lengthAdjust="spacing">WET</text>
+                    <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="none" stroke="#C5CCD1" stroke-width="0.7"/>
+                    <g filter="url(#wetFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="18" font-weight="700">
+                      <text x="80.5" y="93.2" fill="#14181B" textLength="52" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="92.2" fill="url(#wetType)" textLength="52" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="92.2" fill="none" stroke="#F4F7F8" stroke-width="0.3" opacity="0.4" textLength="52" lengthAdjust="spacing">WET</text>
                     </g>
                   </svg>
                 </div>
@@ -1839,7 +1855,7 @@
                   <span class="lever-pivot"></span>
                 </button>
                 <div class="scale-pan scale-dry" aria-hidden="true">
-                  <svg class="scale-svg" viewBox="0 0 160 112">
+                  <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="dryMetal" x1="0" y1="0" x2="0.2" y2="1">
                         <stop offset="0" stop-color="#3E403E"/>
@@ -1855,8 +1871,8 @@
                         <stop offset="0.82" stop-color="#8F4329"/>
                         <stop offset="1" stop-color="#D8CBBA"/>
                       </linearGradient>
-                      <clipPath id="dryPanClip">
-                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      <clipPath id="dryWeightClip">
+                        <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z"/>
                       </clipPath>
                       <filter id="dryRust" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
                         <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="13" stitchTiles="stitch" result="pit"/>
@@ -1878,32 +1894,25 @@
                         <feBlend in="stained" in2="pits" mode="overlay"/>
                       </filter>
                     </defs>
-                    <g fill="none" stroke="#8A8176" stroke-width="0.7" stroke-linecap="square">
-                      <circle cx="80" cy="6" r="2.4"/>
-                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    <g class="scale-bow" fill="none" stroke="#8A8176" stroke-width="0.85" opacity="0.34">
+                      <circle cx="80" cy="14" r="2.15"/>
+                      <path d="M80 16.2 V31"/>
+                      <path d="M66 18 L70 22 M94 18 L90 22" stroke="#8F4329" stroke-width="0.55"/>
+                      <path d="M64 44 A 16 13 0 0 0 96 44"/>
                     </g>
-                    <path d="M66 12 L70 16 M96 11 L92 16" stroke="#8F4329" stroke-width="0.6" fill="none"/>
-                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#100C0A"/>
-                    <g clip-path="url(#dryPanClip)">
-                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#dryMetal)" filter="url(#dryRust)"/>
-                      <path d="M30 88 Q58 98 86 90 Q112 84 134 92" fill="none" stroke="#8F4329" stroke-width="1.4" opacity="0.8"/>
-                      <path d="M34 68 L46 76 L41 83" fill="none" stroke="#3A241C" stroke-width="0.55"/>
-                      <path d="M122 64 L130 74 L124 79" fill="none" stroke="#6A3424" stroke-width="0.5"/>
-                      <ellipse cx="48" cy="90" rx="13" ry="4.2" fill="#8F4329" opacity="0.42"/>
-                      <ellipse cx="112" cy="84" rx="8" ry="3.2" fill="#B86F28" opacity="0.32"/>
-                      <ellipse cx="78" cy="93" rx="5" ry="2" fill="#5A2618" opacity="0.55"/>
+                    <path d="M68 47 H92 V57 L116 73 L122 107 H38 L44 73 L68 57 Z" fill="#100C0A"/>
+                    <g clip-path="url(#dryWeightClip)">
+                      <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="url(#dryMetal)" filter="url(#dryRust)"/>
+                      <path d="M50 98 H112" stroke="#8F4329" stroke-width="1.3" fill="none" opacity="0.75"/>
+                      <path d="M48 72 L58 80 L54 86" fill="none" stroke="#3A241C" stroke-width="0.5"/>
+                      <path d="M108 74 L116 84" fill="none" stroke="#6A3424" stroke-width="0.5"/>
+                      <path d="M54 78 H106 M50 98 H110" fill="none" stroke="#5C4636" stroke-width="0.45" opacity="0.6"/>
                     </g>
-                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#A39888" stroke-width="0.7"/>
-                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5C4636" stroke-width="0.45"/>
-                    <g stroke="#8C764C" stroke-width="0.55" opacity="0.85">
-                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
-                    </g>
-                    <circle cx="24" cy="66" r="1.3" fill="#8A8176"/>
-                    <circle cx="136" cy="66" r="1.3" fill="#B86F28"/>
-                    <g filter="url(#dryFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
-                      <text x="80.7" y="80.4" fill="#1A100C" textLength="96" lengthAdjust="spacing">DRY</text>
-                      <text x="80" y="79.2" fill="url(#dryType)" textLength="96" lengthAdjust="spacing">DRY</text>
-                      <text x="80" y="79.2" fill="none" stroke="#E4DDD2" stroke-width="0.3" opacity="0.28" textLength="96" lengthAdjust="spacing">DRY</text>
+                    <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="none" stroke="#A39888" stroke-width="0.7"/>
+                    <g filter="url(#dryFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="18" font-weight="700">
+                      <text x="80.5" y="93.4" fill="#1A100C" textLength="52" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="92.2" fill="url(#dryType)" textLength="52" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="92.2" fill="none" stroke="#E4DDD2" stroke-width="0.28" opacity="0.25" textLength="52" lengthAdjust="spacing">DRY</text>
                     </g>
                   </svg>
                 </div>
