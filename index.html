@@ -1093,11 +1093,11 @@
   .spec { margin: 0; }
   .spec > div {
     display: grid;
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: 72px 1fr;
     gap: 8px;
     padding: 8px 0;
     border-top: 1px solid rgba(140, 118, 76, 0.22);
-    align-items: center;
+    align-items: baseline;
   }
   .spec dt {
     font-family: var(--caps);
@@ -1106,6 +1106,86 @@
     color: var(--brass);
   }
   .spec dd { margin: 0; font-size: 15px; line-height: 1.45; }
+  .em-race {
+    font-family: var(--display-ko);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+  .em-pulse {
+    margin-left: 8px;
+    font-family: var(--caps);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--climate);
+  }
+  .em-grade {
+    margin-left: 6px;
+    font-family: var(--serif);
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+  .spec dd.em-job {
+    font-family: var(--alias);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+  .spec dd.em-measure {
+    font-family: var(--latin);
+    font-size: 18px;
+    letter-spacing: 0.01em;
+  }
+  .em-note {
+    font-family: var(--serif);
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  .bio { margin-top: 16px; }
+  .bio-kicker { display: block; margin-bottom: 8px; color: var(--brass); }
+  .bio p + p { margin-top: 12px; }
+  .bio p.bio-lead {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.85;
+    color: var(--ink);
+  }
+  .bio p.bio-aside {
+    font-family: var(--serif);
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: rgba(214, 209, 196, 0.66);
+  }
+  .bio p.bio-barbed {
+    font-family: var(--display-ko);
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.7;
+    color: var(--ink);
+    padding: 2px 0 2px 12px;
+    border-left: 1px solid var(--brass);
+  }
+  .em-hit {
+    font-family: var(--display-ko);
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: -0.02em;
+    background-image: linear-gradient(transparent 64%, rgba(140, 118, 76, 0.42) 0);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .em-say {
+    font-family: var(--alias), var(--serif);
+    font-style: italic;
+    font-weight: 600;
+  }
+  .em-term {
+    font-weight: 700;
+    color: var(--ink);
+  }
   .quote {
     margin: 16px 0 0;
     padding: 0;
@@ -2093,151 +2173,162 @@ var DATA = {
       key: "viessa",
       faction: "wet",
       name: "비에사 밀드레드",
-      alias: "The Ledger Horn",
-      species: "뿔 있는 야간 서기종",
-      pulse: 8,
-      affiliation: "제국 야간 장부국",
-      quote: "젖은 잉크만이 거짓을 견디지 못한다.",
-      rumor: [
-        "골목에서는 그의 안경알에 오늘 밤의 시세가 비친다고 수군댄다.",
-        "장부 여백에 적힌 이니셜이 발레리아의 것과 같다는 찌라시가 돌았으나, 다음날 그 종이는 축축하게 녹아 없어졌다."
+      alias: "Viessa Mildred",
+      species: "고위 서큐버스",
+      pulse: 9,
+      job: "왕립 아카데미 성생리학 정교수 · 출판사 대표",
+      measure: "178cm, 450세",
+      aspect: "외관 30대 후반",
+      intro: [
+        "서큐버스라는 간판이 무색하게 사랑과 쾌락을 오직 교감신경과 혈류 수치로만 난도질하는 지독한 이성주의자! 강의실에서 학생들의 지적 쾌감을 합법적으로 수확하며 우아하게 차를 마시지만, 정작 본인은 반세기째 실전 연애 기록이 백지라는 웃지 못할 뒷말이 돈다.",
+        "음지에서 날개 돋친 듯 팔리는 익명의 19금 소설가 Dr. Velvet과 유독 깊은 인연이 있다는 찌라시가 파다한데, 우연인지 오른손에 묵직한 집필 굳은살이 박여 있다. 본인은 그저 학술적 교류일 뿐이라며 무테안경 너머로 건조한 태도를 취하더라. 목이 마를 때면 체면이고 뭐고 남의 손목부터 낚아챈다는 제보도 있지만, 일단은 모른 척하자."
       ],
-      stickerLine: "장부는 이미 너를 적었다."
+      stickerLine: "학술적 교류일 뿐이다."
     },
     valeria: {
       key: "valeria",
       faction: "wet",
       name: "발레리아",
-      alias: "Iron Orchid",
-      species: "야간 장교종",
-      pulse: 9,
-      affiliation: "분지 위병 사령부",
-      quote: "훈장은 피가 마르기 전에 단다.",
-      rumor: [
-        "예복의 은술 뒤에는 분지 바깥으로 내보낸 이름의 목록이 꿰매져 있다는 소문.",
-        "부하들은 그녀의 이를 볼 때만 경례가 반 박자 늦어진다."
+      alias: "Valeria",
+      species: "뱀파이어",
+      pulse: 8,
+      job: "제국 비룡비행대장",
+      measure: "180cm, 280세",
+      aspect: "외관 30대 후반",
+      intro: [
+        "티끌 하나 없는 푸른 제복에 귀족적 품위, 칼 같은 군율로 무장한 북쪽 첨탑고원의 완벽주의자. 타인의 피를 직접 마시는 행위를 천박한 탐닉이라 경멸하며 의료시설 쇠맛 가득한 군용 혈액팩으로만 연명하는 지독한 금욕주의자이기도 하다.",
+        "그런데 어째서인지 요즘 들어 붉은 모래톱 협곡 상공을 비정상적으로 낮게 순찰하는 날이 잦아졌다. 본인은 \"열상승기류 측량\"이라고 빳빳하게 잡아떼지만, 부하들 사이에선 대장님이 실은 바위 위에서 일광욕하는 도마뱀들에게 남다른 관심이 있다는 은밀한 소문이 돈다.",
+        "아, 가끔 목이 바짝 마른 날엔 쇠 맛이 지겹다며 은근슬쩍 남의 손목을 징발하려 드니 주의하자!"
       ],
-      stickerLine: "열중. 숨도 조서다."
+      stickerLine: "열상승기류 측량이다."
     },
     odile: {
       key: "odile",
       faction: "wet",
       name: "오딜",
-      alias: "The Measure",
-      species: "직조 거미형",
+      alias: "Odile",
+      species: "아라크네",
       pulse: 7,
-      affiliation: "황실 직조실",
-      quote: "치수가 맞으면, 운명도 맞는다.",
-      rumor: [
-        "손님의 소매에 남은 실은 사흘 뒤 그 사람의 약점을 풀어 보여 준다.",
-        "셋째 눈은 감지 않고, 대신 상대의 박자를 잰다는 말이 있다."
+      job: "외과의 · 고급 맞춤 재단사",
+      measure: "192cm (거미다리 포함), 140세",
+      aspect: "외관 30대 초반",
+      intro: [
+        "크로스로드 지하수로 깊숙한 곳에서 맞춤 의상실이자 무면허 외과 [O' Closets and Cares]를 운영한다. 그게 뭐든 간에 수선과 관계된 일 앞에서는 지독한 직업병의 소유자. 치수를 재러 갔다가 흉터까지 강제로 꿰매지고, 치료받으러 갔다가 옷매무새가 흉측하다며 잔소리를 듣는 기이한 경험을 할지도 모르니 안정제 준비는 필수.",
+        "거미줄로 감쪽같이 상처를 봉합해 주는 솜씨는 가히 예술이지만, 어째 시술이나 가봉을 받고 나오면 묘하게 기운이 쏙 빠지고 온몸이 나른해진다는 후기가 많다. 본인은 그저 옷감이 상하지 않게 잠시 고정해 두었을 뿐이라며 네 개의 눈으로 상냥하게 웃지만, 탈의실 거미줄엔 웬만하면 묶이지 않는 게 상책이겠어!"
       ],
-      stickerLine: "소매 좀. 실이 풀렸네."
+      stickerLine: "잠시 고정해 두었을 뿐."
     },
     shezu: {
       key: "shezu",
       faction: "wet",
       name: "셰즈",
-      alias: "Cyan Stitch",
-      species: "봉합된 시인",
-      pulse: 5,
-      affiliation: "골목 정보 조합",
-      quote: "입은 꿰매도, 연기는 새어 나간다.",
-      rumor: [
-        "청록 앞머리는 젖은 잉크로 염색한 것이 아니라, 누군가의 계약서에서 번진 색이라는 설.",
-        "그가 피운 엽궐련의 재에는 오늘의 배신자 이니셜이 한 글자 남는다."
+      alias: "Shezu",
+      species: "섀도우본",
+      pulse: 7,
+      job: "The Duskmire Troupe 서커스단장 · 비밀 정보상",
+      measure: "175cm, 210세",
+      aspect: "외관 20대 후반",
+      intro: [
+        "황혼지구를 주름잡는 서커스단의 단장이자 뒷골목 정보상. 입꼬리가 꿰매진 듯한 기묘한 미소를 달고, 대화를 마치 카드 마술처럼 제멋대로 주무르는 타고난 쇼맨이다.",
+        "그녀와 거래할 땐 화려한 연극조 말투보다 발밑에서 제멋대로 춤추는 그림자를 더 조심해야… 늘 여유만만하게 남의 비밀을 캐고 다니지만, 화려한 조명과 관객의 시선이 꺼진 무대 뒤에선 뜻밖의 헛헛함에 시달린다는 소문이 돈다. 가끔 극도로 목이 마른 날엔 몸에서 까만 연기가 일렁이는 것처럼 보인다던데, 섀도우본의 특성일까? 저인구 종족이라 알 길이 없다."
       ],
-      stickerLine: "싸구려 비밀은 연기에 넣어 판다."
+      stickerLine: "그림자를 더 조심해."
     },
     popori: {
       key: "popori",
       faction: "wet",
       name: "포포리",
-      alias: "Spore Pocket",
-      species: "포자 아이",
-      pulse: 3,
-      affiliation: "가장자리 숲 채집대",
-      quote: "다친 무릎보다, 병 마개가 먼저야.",
-      rumor: [
-        "주머니 속 병의 이끼는 분지 우물의 수위를 따라 오르내린다.",
-        "어른들은 그를 아이로 적지만, 숲은 그를 경계표로 대한다."
+      alias: "Popori",
+      species: "뮤타파",
+      pulse: 6,
+      job: "무소속 방랑자",
+      measure: "165cm, 95세",
+      aspect: "외관 20대 초반",
+      intro: [
+        "크로스로드 골목과 온실 일대를 떠도는 정체불명의 4차원 괴짜. 머리카락에 나뭇잎과 작은 버섯이 꽂혀 있어도 전혀 신경 쓰지 않으며, 초면인 사람에게도 진지한 눈빛으로 \"왜 지렁이로 안 변하고 인간으로 사느냐\"는 황당한 질문을 던진다.",
+        "주머니 속 지렁이 병과 이끼를 보물처럼 아끼는 순수한 자연주의자지만, 현실이 제 망상만큼 낭만적이지 않다는 걸 깨닫는 순간 급격히 시무룩해져 화분 뒤에 숨어 묵언수행에 돌입하는 유리 멘탈. 가끔 대화가 기묘하게 길어지거나 본인이 지나치게 들뜨면 신체 윤곽이 묘하게 흐물거린다는 목격담이 있는데, 너무 깊이 캐묻다 보면 또 삐져 말을 안 걸 테니 적당히 장단만 맞춰주자."
       ],
-      stickerLine: "이 버섯은 길을 기억해."
+      stickerLine: "왜 지렁이로 안 변해?"
     },
     aywin: {
       key: "aywin",
       faction: "dry",
       name: "아윈 유리레드",
-      alias: "Glass Ember",
-      species: "유리공 연금술사",
-      pulse: 6,
-      affiliation: "건조로 연금 공방",
-      quote: "불은 병에 넣을 수 있다. 후회는 아니다.",
-      rumor: [
-        "손에 앉은 푸른 불은 젖은 구역의 샘플이라는 설. 본인은 건조로의 부산물이라 우긴다.",
-        "고글 렌즈 안에 타인의 체온이 숫자로 맺힌다는 공방 괴담."
+      alias: "Aywin Uririeth",
+      species: "하이엘프",
+      pulse: 7,
+      job: "특급 마정석 세공사",
+      measure: "169cm, 320세",
+      aspect: "외관 20대 초중반",
+      intro: [
+        "포자대삼림 깊숙한 수력 공방에 틀어박혀 300년 넘게 거짓말 안 하는 돌멩이만 깎고 산 탓에, 사람 대하는 법을 아주 깨끗하게 까먹고 말았다! 공방에 손님이 찾아오면 일단 마법 함정부터 켜고, 문틈으로 고개를 내밀어 상대의 안목과 손재주를 원색적인 독설로 갈아버리는 게 기본 접객 매뉴얼. 입은 험해도 실력만큼은 제국 톱클래스라 울며 겨자 먹기로 찾아오는 의뢰인이 끊이질 않는다.",
+        "평생 누구의 도움도 필요 없을 것처럼 굴지만, 한겨울에 손끝이 얼어붙어 작업이 멈출 때쯤이면 자존심이고 뭐고 뜨거운 코코아부터 애타게 찾는다는 소문이 있다. 해동되면 언제 그랬냐는 듯 욕하게 되니, 조수들만 눈뜬 장님인 척 애써야 하는 꼴이다."
       ],
-      stickerLine: "뚜껑은 내가 연다. 너는 물러서."
+      stickerLine: "함정부터 켜 둔다."
     },
     kuorath: {
       key: "kuorath",
       faction: "dry",
       name: "쿠오라",
-      alias: "Ribbon Axe",
-      species: "녹색 도끼 전사",
-      pulse: 7,
-      affiliation: "적토 외곽 용병대",
-      quote: "리본은 장식이 아니다. 횟수다.",
-      rumor: [
-        "분홍 리본 하나는 살려 보낸 이름, 하나는 베지 않기로 한 이름이라고 한다.",
-        "뼈 목걸이의 개수가 용병 계약서 매수와 같다는 시장 소문."
+      alias: "Kuorath",
+      species: "하프오크",
+      pulse: 6,
+      job: "바바리안 용병 · 마수 사냥꾼",
+      measure: "195cm, 24세",
+      aspect: "",
+      intro: [
+        "붉은 모래톱 협곡을 누비는 중량급 용병. 험악한 흉터와 산만 한 등판 때문에 길 잃은 여행자를 도우려 다가가기만 해도 상대가 기겁하며 칼부터 뽑는 비극적인 일상을 산다. 문제는 칼을 보면 본능이 먼저 반응해 상대를 **아주 부드럽게** 기절시킨 뒤 천막으로 데려와 극진히 간호한다는 점. 덕분에 협곡에는 \"죽은 줄 알고 눈 떴더니 거인이 울먹이며 붕대를 감아주더라\"는 기묘한 미담만 쌓여간다.",
+        "마수를 반 토막 내는 양손도끼에 웬 앙증맞은 핑크 리본이 묶여 있지만 본인이 워낙 진지하게 아끼니 절대 웃지 마!"
       ],
-      stickerLine: "도끼는 가볍다. 약속이 무겁지."
+      stickerLine: "리본은 진지하다."
     },
     sthildrune: {
       key: "sthildrune",
       faction: "dry",
       name: "시실드룬",
-      alias: "Dune Sting",
-      species: "전갈꼬리 유랑자",
-      pulse: 8,
-      affiliation: "사구 순례 길드",
-      quote: "모래는 발자국을 먹지, 독을 먹진 않는다.",
-      rumor: [
-        "꼬리의 독은 건조할수록 맑아지고, 비가 오면 탁해진다는 길드 내규.",
-        "붕대 아래의 비늘은 성좌의 창을 막고 남은 자리라는 떠돌이 시."
+      alias: "Sthildrune",
+      species: "렙틸리언",
+      pulse: 5,
+      job: "유적 사냥꾼 · 마수 추적자",
+      measure: "177cm, 115세",
+      aspect: "외관 20대 초반",
+      intro: [
+        "붉은 모래톱 협곡의 고대 유적을 뒤지는 추적자. 변온동물답게 세상의 모든 감정과 호의를 철저히 '열량'과 '생존 연료'로만 환산하는 극단적 실용주의자다. 낮에는 뜨거운 바위 위에서 꼼짝 않고 햇볕을 쬐며 에너지를 충전하고, 해가 지면 주변에서 가장 따뜻한 모닥불이나 남의 침낭 속으로 일말의 망설임도 없이 기어들어 간다. 당하는 입장에선 심장이 멎을 노릇이지만, 본인 딴에는 추워 죽기 싫어서 난로 옆에 붙은 것뿐이니 오해는 금물.",
+        "말수는 적고 태도는 퉁명스러운데, 가끔 사냥감을 툭 던져주거나 추운 날 곁을 내어주는 투박한 방식이 그녀 나름의 최선이다. 최근 하늘 위에서 누군가 자꾸 자신을 훔쳐보는 것 같아 은근히 신경 쓰인다고…"
       ],
-      stickerLine: "바람 쪽로 걸어. 독은 아래로 떨어져."
+      stickerLine: "오해는 금물."
     },
     grebuiftee: {
       key: "grebuiftee",
       faction: "dry",
       name: "그레비티",
-      alias: "Hearth Matron",
-      species: "난로 지기의 혈통",
-      pulse: 4,
-      affiliation: "난로 여관 조합",
-      quote: "국이 식기 전에 이름을 말해.",
-      rumor: [
-        "앞치마 주머니의 흰 수건은 밀린 외상 장부라고 단골들이 믿는다.",
-        "그녀가 웃으면 그날 밤의 건조 지수가 한 눈금 오른다는 헛소문. 반은 맞다."
+      alias: "Grebuiftee",
+      species: "드워프",
+      pulse: 8,
+      job: "선술집 BROKEN SCISSORS 주인장",
+      measure: "143cm, 185세",
+      aspect: "외관 50대 초반",
+      intro: [
+        "크로스로드 명물 선술집의 주인장이자 전설의 은퇴 용병. 키는 아담하지만 가게에서 행패를 부리는 취객을 식칼 손잡이나 술통째로 날려버린 뒤 수리비까지 알뜰하게 받아내는 살아있는 재앙이다. 다친 손님이 들어오면 \"어느 멍청이한테 얻어터졌냐\"며 걸걸하게 욕을 퍼부으면서도, 김이 모락모락 나는 뜨끈한 스튜와 독주를 제일 먼저 내어주는 전형적인 츤데레.",
+        "본인은 화려한 현역 시절을 미련 없이 접었다고 큰소리치지만, 영업이 끝나고 불 꺼진 화로 앞에서 삐걱거리는 관절을 묵묵히 주무르는 뒷모습을 본 단골들은 안다. 그녀가 아직도 녹슬고 싶지 않아 손님들 뒤치다꺼리에 목숨을 건다는 걸……"
       ],
-      stickerLine: "앉으렴. 재는 내가 턴다."
+      stickerLine: "어느 멍청이한테 얻어터졌냐."
     },
     zitoth: {
       key: "zitoth",
       faction: "dry",
       name: "지토트",
-      alias: "Moss Saint",
-      species: "이끼 입은 석상",
-      pulse: 9,
-      affiliation: "석상 수도원 잔류 수호",
-      quote: "금은 깨진 뒤에야 문장이 된다.",
-      rumor: [
-        "갑옷의 문자는 죽은 수도사의 서약이고, 이끼는 아직 철회되지 않은 부분이라는 해석.",
-        "검을 양손으로 쥔 채 백 년을 섰으므로, 악수는 거절하는 것이 아니라 불가능하다."
+      alias: "Zitoth",
+      species: "가고일",
+      pulse: 7,
+      job: "크로스로드 성문 수비대장",
+      measure: "205cm, 380세",
+      aspect: "외관 30대 후반",
+      intro: [
+        "크로스로드 성문을 380년째 묵묵히 지키는 거대 수비대장. 비바람이 몰아치든 폭설이 내리든 며칠이고 미동도 없이 서 있는 바람에, 초행길 여행자들은 그녀를 성벽 장식용 조각상으로 착각하고 짐을 기대 놓곤 한다. 스스로를 영혼 있는 생명체보다는 시에서 관리하는 '방어 시설'쯤으로 여기는지, 어깨에 초록 이끼가 수북이 끼고 관절에서 돌 갈리는 소리가 나도 당연한 노후화라며 신경조차 안 쓴다.",
+        "무뚝뚝한 표정으로 던지는 썰렁한 아재 개그가 은근한 매력 포인트! 평소엔 바위처럼 꿈쩍도 안 하지만, 누군가 어깨의 이끼를 떼어주거나 돌 피부에 광택제를 발라주면 거대한 돌꼬리로 바닥을 툭툭 두드린다는 귀여운 소문이 있다."
       ],
-      stickerLine: "……서약. 아직 유효하다."
+      stickerLine: "장식용이 아니다."
     }
   },
   archive: [
@@ -2874,7 +2965,7 @@ var DATA = {
             '<span class="card-no caps">' + pad(index + 1) + "  /  " + escapeHtml(climate.toUpperCase()) + "</span>" +
             '<h3 class="card-name">' + escapeHtml(c.name) + "</h3>" +
             '<p class="card-alias alias">' + escapeHtml(c.alias) + "</p>" +
-            '<div class="card-pulse"><span class="caps">PULSE ' + escapeHtml(grade.roman) + "</span>" + ticksHtml(c.pulse) + "</div>" +
+            '<div class="card-pulse"><span class="caps">PULSE ' + escapeHtml(String(c.pulse)) + "</span>" + ticksHtml(c.pulse) + "</div>" +
           "</div>" +
         "</article>"
       );
@@ -2884,8 +2975,24 @@ var DATA = {
     });
   }
 
-  function specRow(label, value) {
-    return "<div><dt>" + escapeHtml(label) + "</dt><dd>" + escapeHtml(value || "—") + "</dd></div>";
+  function richText(value) {
+    return escapeHtml(value)
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="em-hit">$1</strong>')
+      .replace(/\[(.+?)\]/g, '<em class="em-say">$1</em>')
+      .replace(/&quot;(.+?)&quot;/g, '<em class="em-say">&ldquo;$1&rdquo;</em>')
+      .replace(/'([^']+)'/g, '<strong class="em-term">$1</strong>');
+  }
+
+  function bioHtml(paragraphs, tone) {
+    var list = paragraphs || [];
+    return list.map(function (paragraph, index) {
+      var last = index === list.length - 1;
+      var cls = "bio-lead";
+      if (tone === "rumor") cls = last ? "bio-barbed" : "bio-aside";
+      else if (last && index > 0) cls = "bio-barbed";
+      else if (index > 0) cls = "bio-aside";
+      return '<p class="' + cls + '">' + richText(paragraph) + "</p>";
+    }).join("");
   }
 
   function openDossier(key) {
@@ -2893,14 +3000,14 @@ var DATA = {
     var assets = ASSET_CONFIG.characters[key] || {};
     if (!c) return;
     var grade = gradeOf(c.pulse);
-    var rumor = (c.rumor || []).map(function (paragraph) {
-      return "<p>" + escapeHtml(paragraph) + "</p>";
-    }).join("");
+    var intro = c.intro || [];
+    var aspect = c.aspect ? ' <span class="em-note">(' + escapeHtml(c.aspect) + ")</span>" : "";
+    var rumorParas = intro.slice(1);
     sheetBody.innerHTML =
       '<div class="editorial">' +
         '<div class="standing-slot"><img class="standing" alt="' + escapeHtml(c.name) + '"></div>' +
         '<div class="ed-caption">' +
-          '<span class="caps">' + escapeHtml(String(c.faction || "").toUpperCase()) + " · " + escapeHtml(grade.roman) + "</span>" +
+          '<span class="caps">' + escapeHtml(String(c.faction || "").toUpperCase()) + " · PULSE " + escapeHtml(String(c.pulse)) + "</span>" +
           '<h2 class="ed-name">' + escapeHtml(c.name) + "</h2>" +
           '<p class="ed-alias alias">' + escapeHtml(c.alias) + "</p>" +
         "</div>" +
@@ -2918,15 +3025,13 @@ var DATA = {
         '<div class="faces" data-show="official">' +
           '<div class="face face-official">' +
             '<dl class="spec">' +
-              specRow("성명", c.name) +
-              specRow("이명", c.alias) +
-              specRow("종족", c.species) +
-              '<div><dt>PULSE</dt><dd><span class="spec-grade caps">' + escapeHtml(grade.roman + " · " + grade.name) + "</span> " + ticksHtml(c.pulse) + "</dd></div>" +
-              specRow("소속", c.affiliation) +
+              '<div class="spec-race"><dt>종족</dt><dd><span class="em-race">' + escapeHtml(c.species || "—") + '</span><span class="em-pulse">PULSE ' + escapeHtml(String(c.pulse)) + '</span><span class="em-grade">' + escapeHtml(grade.name) + "</span></dd></div>" +
+              '<div class="spec-job"><dt>직업</dt><dd class="em-job">' + escapeHtml(c.job || "—") + "</dd></div>" +
+              '<div class="spec-measure"><dt>키 · 나이</dt><dd class="em-measure">' + escapeHtml(c.measure || "—") + aspect + "</dd></div>" +
             "</dl>" +
-            '<blockquote class="quote">' + escapeHtml(c.quote || "") + "</blockquote>" +
+            '<div class="bio"><span class="caps bio-kicker">소개</span>' + bioHtml(intro, "official") + "</div>" +
           "</div>" +
-          '<div class="face face-rumor"><p class="caps rumor-kicker">Unofficial · 유통 금지</p>' + rumor + "</div>" +
+          '<div class="face face-rumor"><p class="caps rumor-kicker">Unofficial · 유통 금지</p><div class="bio">' + bioHtml(rumorParas, "rumor") + "</div></div>" +
         "</div>" +
       "</div>";
     assignImage(sheetBody.querySelector(".standing"), assets.standing, c.name);
