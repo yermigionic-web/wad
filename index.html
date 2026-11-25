@@ -730,23 +730,39 @@
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   }
-  .lever-labels {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 8px 0;
-    font-family: var(--caps);
-    font-size: 11px;
-    letter-spacing: 0.22em;
+  .lever-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 86px minmax(0, 1fr);
+    align-items: end;
+    gap: 2px;
+    min-height: 124px;
   }
-  .lab-wet { color: var(--wet); }
-  .lab-dry { color: var(--dry-hot); }
-  #stage[data-climate="wet"] .lab-dry { opacity: 0.35; }
-  #stage[data-climate="dry"] .lab-wet { opacity: 0.35; }
+  .scale-pan {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+    transform-origin: 50% 12%;
+    transition: transform 0.46s cubic-bezier(.18, 1.25, .28, 1), opacity 0.35s ease;
+  }
+  .scale-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  #stage[data-climate="wet"] .scale-wet { transform: translateY(7px); }
+  #stage[data-climate="wet"] .scale-dry { transform: translateY(-5px); opacity: 0.5; }
+  #stage[data-climate="dry"] .scale-dry { transform: translateY(7px); }
+  #stage[data-climate="dry"] .scale-wet { transform: translateY(-5px); opacity: 0.5; }
+  .silver-sheen {
+    transform-box: fill-box;
+    animation: silverSweep 8.5s ease-in-out infinite;
+  }
+  @keyframes silverSweep {
+    0%, 100% { transform: translateX(6px); opacity: 0.22; }
+    50% { transform: translateX(78px); opacity: 0.55; }
+  }
   .lever-btn {
     position: relative;
+    z-index: 2;
     display: block;
     width: 100%;
-    height: 112px;
+    height: 118px;
   }
   .lever-pivot {
     position: absolute;
@@ -1665,11 +1681,153 @@
             </div>
             <div class="lever-mech" id="lever-mech">
               <div class="lever-ruler" aria-hidden="true"></div>
-              <div class="lever-labels" aria-hidden="true"><span class="lab-wet">WET</span><span class="lab-dry">DRY</span></div>
-              <button type="button" id="lever-btn" class="lever-btn" aria-pressed="false" aria-label="WET에서 DRY로 전환">
-                <span class="lever-arm"><span class="lever-knob"></span></span>
-                <span class="lever-pivot"></span>
-              </button>
+              <div class="lever-stage">
+                <div class="scale-pan scale-wet" aria-hidden="true">
+                  <svg class="scale-svg" viewBox="0 0 160 112">
+                    <defs>
+                      <linearGradient id="wetMetal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#6A7278"/>
+                        <stop offset="0.16" stop-color="#EEF3F5"/>
+                        <stop offset="0.4" stop-color="#C5CED3"/>
+                        <stop offset="0.68" stop-color="#8B959C"/>
+                        <stop offset="1" stop-color="#D8DEE2"/>
+                      </linearGradient>
+                      <linearGradient id="wetType" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#F7FAFB"/>
+                        <stop offset="0.38" stop-color="#D4DCE0"/>
+                        <stop offset="0.74" stop-color="#8E989F"/>
+                        <stop offset="1" stop-color="#F0F4F6"/>
+                      </linearGradient>
+                      <linearGradient id="wetSheen" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0" stop-color="#F7FAFB" stop-opacity="0"/>
+                        <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.9"/>
+                        <stop offset="1" stop-color="#F7FAFB" stop-opacity="0"/>
+                      </linearGradient>
+                      <clipPath id="wetPanClip">
+                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      </clipPath>
+                      <filter id="wetGrain" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.025 0.95" numOctaves="2" seed="4" stitchTiles="stitch" result="brush"/>
+                        <feColorMatrix in="brush" type="saturate" values="0" result="gray"/>
+                        <feComponentTransfer in="gray" result="lines">
+                          <feFuncA type="linear" slope="0.42"/>
+                        </feComponentTransfer>
+                        <feBlend in="SourceGraphic" in2="lines" mode="overlay" result="brushed"/>
+                        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" stitchTiles="stitch" result="dust"/>
+                        <feColorMatrix in="dust" type="matrix" values="0 0 0 0 0.86  0 0 0 0 0.89  0 0 0 0 0.92  0 0 0 0.2 0" result="mist"/>
+                        <feBlend in="brushed" in2="mist" mode="soft-light" result="full"/>
+                        <feComposite in="full" in2="SourceAlpha" operator="in"/>
+                      </filter>
+                      <filter id="wetFace" x="-8%" y="-20%" width="116%" height="150%" color-interpolation-filters="sRGB">
+                        <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="8" stitchTiles="stitch" result="grain"/>
+                        <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0.9  0 0 0 0 0.93  0 0 0 0 0.95  0 0 0 0.18 0" result="veil"/>
+                        <feBlend in="SourceGraphic" in2="veil" mode="soft-light"/>
+                      </filter>
+                    </defs>
+                    <g fill="none" stroke="#A7B0B6" stroke-width="0.7" stroke-linecap="square">
+                      <circle cx="80" cy="6" r="2.4"/>
+                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    </g>
+                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#0C0E10"/>
+                    <g clip-path="url(#wetPanClip)">
+                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#wetMetal)" filter="url(#wetGrain)"/>
+                      <rect class="silver-sheen" x="8" y="52" width="22" height="46" fill="url(#wetSheen)"/>
+                      <path d="M28 90 Q80 100 132 90" stroke="#1E4D54" stroke-width="1.1" fill="none" opacity="0.7"/>
+                      <g fill="#D5DCE0">
+                        <circle cx="36" cy="88" r="0.7" opacity="0.8"/>
+                        <circle cx="52" cy="92" r="0.9" opacity="0.55"/>
+                        <circle cx="108" cy="91" r="0.8" opacity="0.6"/>
+                        <circle cx="124" cy="86" r="0.6" opacity="0.75"/>
+                      </g>
+                    </g>
+                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#C5CCD1" stroke-width="0.7"/>
+                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5E686F" stroke-width="0.45"/>
+                    <g stroke="#8E989F" stroke-width="0.6">
+                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
+                    </g>
+                    <circle cx="24" cy="66" r="1.3" fill="#C5CCD1"/>
+                    <circle cx="136" cy="66" r="1.3" fill="#C5CCD1"/>
+                    <g filter="url(#wetFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
+                      <text x="80.6" y="80.2" fill="#14181B" textLength="96" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="79.2" fill="url(#wetType)" textLength="96" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="79.2" fill="none" stroke="#F4F7F8" stroke-width="0.35" opacity="0.45" textLength="96" lengthAdjust="spacing">WET</text>
+                    </g>
+                  </svg>
+                </div>
+                <button type="button" id="lever-btn" class="lever-btn" aria-pressed="false" aria-label="WET에서 DRY로 전환">
+                  <span class="lever-arm"><span class="lever-knob"></span></span>
+                  <span class="lever-pivot"></span>
+                </button>
+                <div class="scale-pan scale-dry" aria-hidden="true">
+                  <svg class="scale-svg" viewBox="0 0 160 112">
+                    <defs>
+                      <linearGradient id="dryMetal" x1="0" y1="0" x2="0.2" y2="1">
+                        <stop offset="0" stop-color="#3E403E"/>
+                        <stop offset="0.2" stop-color="#C4BFB4"/>
+                        <stop offset="0.48" stop-color="#7A756E"/>
+                        <stop offset="0.72" stop-color="#4A4038"/>
+                        <stop offset="1" stop-color="#8C6238"/>
+                      </linearGradient>
+                      <linearGradient id="dryType" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#E4DDD2"/>
+                        <stop offset="0.3" stop-color="#B7B1A6"/>
+                        <stop offset="0.62" stop-color="#6E675F"/>
+                        <stop offset="0.82" stop-color="#8F4329"/>
+                        <stop offset="1" stop-color="#D8CBBA"/>
+                      </linearGradient>
+                      <clipPath id="dryPanClip">
+                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      </clipPath>
+                      <filter id="dryRust" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="13" stitchTiles="stitch" result="pit"/>
+                        <feDisplacementMap in="SourceGraphic" in2="pit" scale="1.35" xChannelSelector="R" yChannelSelector="G" result="dented"/>
+                        <feTurbulence type="turbulence" baseFrequency="0.05 0.11" numOctaves="4" seed="23" stitchTiles="stitch" result="field"/>
+                        <feColorMatrix in="field" type="matrix" values="0.7 0.2 0 0 0.22  0.15 0.22 0 0 0.06  0.04 0.04 0.05 0 0.03  0.95 -0.25 -0.2 0 0.02" result="rust"/>
+                        <feBlend in="dented" in2="rust" mode="multiply" result="eaten"/>
+                        <feTurbulence type="fractalNoise" baseFrequency="0.03 1.15" numOctaves="2" seed="6" stitchTiles="stitch" result="brush"/>
+                        <feColorMatrix in="brush" type="matrix" values="0 0 0 0 0.55  0 0 0 0 0.52  0 0 0 0 0.46  0 0 0 0.32 0" result="grain"/>
+                        <feBlend in="eaten" in2="grain" mode="overlay" result="full"/>
+                        <feComposite in="full" in2="SourceAlpha" operator="in"/>
+                      </filter>
+                      <filter id="dryFace" x="-8%" y="-18%" width="116%" height="146%" color-interpolation-filters="sRGB">
+                        <feTurbulence type="turbulence" baseFrequency="0.09 0.16" numOctaves="3" seed="17" result="field"/>
+                        <feColorMatrix in="field" type="matrix" values="0.45 0.12 0 0 0.28  0.1 0.14 0 0 0.08  0.02 0.02 0.04 0 0.04  0.85 -0.28 -0.18 0 0.02" result="rust"/>
+                        <feBlend in="SourceGraphic" in2="rust" mode="multiply" result="stained"/>
+                        <feTurbulence type="fractalNoise" baseFrequency="1.25" numOctaves="2" seed="9" stitchTiles="stitch" result="pit"/>
+                        <feColorMatrix in="pit" type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.38  0 0 0 0 0.34  0 0 0 0.38 0" result="pits"/>
+                        <feBlend in="stained" in2="pits" mode="overlay"/>
+                      </filter>
+                    </defs>
+                    <g fill="none" stroke="#8A8176" stroke-width="0.7" stroke-linecap="square">
+                      <circle cx="80" cy="6" r="2.4"/>
+                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    </g>
+                    <path d="M66 12 L70 16 M96 11 L92 16" stroke="#8F4329" stroke-width="0.6" fill="none"/>
+                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#100C0A"/>
+                    <g clip-path="url(#dryPanClip)">
+                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#dryMetal)" filter="url(#dryRust)"/>
+                      <path d="M30 88 Q58 98 86 90 Q112 84 134 92" fill="none" stroke="#8F4329" stroke-width="1.4" opacity="0.8"/>
+                      <path d="M34 68 L46 76 L41 83" fill="none" stroke="#3A241C" stroke-width="0.55"/>
+                      <path d="M122 64 L130 74 L124 79" fill="none" stroke="#6A3424" stroke-width="0.5"/>
+                      <ellipse cx="48" cy="90" rx="13" ry="4.2" fill="#8F4329" opacity="0.42"/>
+                      <ellipse cx="112" cy="84" rx="8" ry="3.2" fill="#B86F28" opacity="0.32"/>
+                      <ellipse cx="78" cy="93" rx="5" ry="2" fill="#5A2618" opacity="0.55"/>
+                    </g>
+                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#A39888" stroke-width="0.7"/>
+                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5C4636" stroke-width="0.45"/>
+                    <g stroke="#8C764C" stroke-width="0.55" opacity="0.85">
+                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
+                    </g>
+                    <circle cx="24" cy="66" r="1.3" fill="#8A8176"/>
+                    <circle cx="136" cy="66" r="1.3" fill="#B86F28"/>
+                    <g filter="url(#dryFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
+                      <text x="80.7" y="80.4" fill="#1A100C" textLength="96" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="79.2" fill="url(#dryType)" textLength="96" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="79.2" fill="none" stroke="#E4DDD2" stroke-width="0.3" opacity="0.28" textLength="96" lengthAdjust="spacing">DRY</text>
+                    </g>
+                  </svg>
+                </div>
+              </div>
             </div>
             <p class="lever-note" id="lever-note"></p>
           </div>
