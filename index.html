@@ -699,6 +699,7 @@
   .tabs[data-tab="archive"] .tab-bar { transform: translateX(100%); }
   .view { display: none; padding-bottom: calc(28px + var(--safe-b)); }
   .view.is-on { display: block; }
+  #view-archive { padding-bottom: calc(108px + var(--safe-b)); }
 
   /* lever */
   .lever-block { padding: 16px 16px 6px; }
@@ -1283,6 +1284,13 @@
     line-height: 1.7;
     color: var(--ink-dim);
   }
+  .arch-lead del, .acc-inner del {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    color: rgba(214, 209, 196, 0.48);
+  }
+  .acc-inner strong { font-weight: 700; color: var(--ink); }
+  .acc-inner p em { font-style: italic; }
   .acc { border-top: 1px solid rgba(140, 118, 76, 0.28); }
   .acc:last-child { border-bottom: 1px solid rgba(140, 118, 76, 0.28); margin-bottom: 88px; }
   .acc-head {
@@ -1344,20 +1352,51 @@
   .grade-list { list-style: none; margin: 0 0 14px; padding: 0 16px; }
   .grade-list li {
     display: grid;
-    grid-template-columns: 42px 1fr auto;
-    gap: 8px;
-    align-items: baseline;
+    grid-template-columns: 28px minmax(0, 1fr) max-content;
+    gap: 6px;
+    align-items: start;
     padding: 6px 0;
     border-top: 1px solid rgba(140, 118, 76, 0.22);
-    font-size: 14px;
+    font-size: 12.5px;
+    line-height: 1.45;
   }
-  .grade-list span:first-child { font-family: var(--caps); color: var(--brass); font-size: 12px; }
-  .grade-list em { font-family: var(--alias); font-size: 14px; color: var(--ink-dim); }
+  .grade-list span:first-child { font-family: var(--caps); color: var(--brass); font-size: 11px; padding-top: 1px; }
+  .grade-list span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+  .grade-list em {
+    font-family: var(--alias);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    padding-top: 1px;
+  }
+  .place { margin: 0 0 12px; padding: 0 16px; }
+  .place b {
+    display: block;
+    margin-bottom: 3px;
+    font-family: var(--display-ko);
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--brass);
+  }
+  .place b::before { content: "· "; }
+  .place p { margin: 0; padding: 0; }
   .lex { margin: 0 0 16px; }
   .lex dt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
     font-family: var(--display-ko);
     font-size: 15px;
     margin-top: 12px;
+  }
+  .lex dt em {
+    font-family: var(--alias);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink-dim);
   }
   .lex dd {
     margin: 3px 0 0;
@@ -2135,7 +2174,7 @@ Object.keys(ASSET_MANIFEST.characters).forEach(function (key) {
 var DATA = {
   ui: {
     archiveBannerAlt: "벨-아르카 분지의 시계탑 성채",
-    archiveLead: "제국 지리학회가 외부 반출을 금한 분지 기록의 발췌. 아래 목차는 열람용 임시 문안이다."
+    archiveLead: "제국 지리학회가 외부 반출을 엄금한 분지 기밀 기록… 이라고는 하는데, 크로스로드 뒷골목에선 3실트만 쥐여주면 찌라시 장수한테 사본을 살 수 있다. ~~돈이 최고다.~~"
   },
   climate: {
     wet: {
@@ -2381,56 +2420,76 @@ var DATA = {
   archive: [
     {
       no: "01",
-      title: "벨-아르카 분지",
-      kicker: "GEOGRAPHY",
+      title: "WOMAN & WOMEN",
+      kicker: "PREMISE",
       paragraphs: [
-        "분지는 적토 협곡의 바닥에 가라앉은 원형 성채와, 그 주위를 감는 폭포, 그리고 성채가 삼키지 못한 가장자리로 이루어진다. 시계탑은 시간을 알리기보다 습도의 주기를 알린다.",
-        "공식 지도는 성채를 중심으로 동심원을 그린다. 비공식 지도는 골목의 물웅덩이와 건조로의 균열을 먼저 찍는다. 두 지도가 겹치는 밤, 분지는 잠시 정직해진다.",
-        "임시 문안. 지명, 구역 명칭, 출입 금지를 여기에 덧붙이면 된다."
+        "이 세계에 남성이라는 개념은 존재하지 않음. 여인들끼리 사랑을 나누고, 마력 파동의 공명과 연금 의식을 통해 새 생명을 잉태하는 것이 지극히 당연한 상식이다. 덕분에 구시대적 족보 싸움은 줄었지만, 대신 \"아이가 누구의 파동을 더 닮았느냐\"를 두고 아카데미 논문이 터져 나오는 지적인 기싸움이나 재판은 일상적인 것 같다.",
+        "분지의 모든 주민은 크게 두 가지 생리적 축으로 나뉜다. 타인의 감정·파동·체액을 수확해 존재를 유지하는 **Wet―습성**과, 스스로의 체온과 생명을 연소해 힘을 뽑아내는 **Dry―건성**이다.",
+        "문제는 둘 다 연비가 끔찍하다는 점이다. Wet은 주기적으로 수확을 못 하면 목이 타들어가고, Dry는 열량이 바닥나면 관절이 돌처럼 굳어 강제 동면에 들어가는데… 결국 이 도시의 로맨스 절반은 *추워 죽기 싫어서* 혹은 *말라 죽기 싫어서* 시작된다."
       ]
     },
     {
       no: "02",
-      title: "화폐와 물가",
-      kicker: "LEDGER",
+      title: "PULSE 등급",
+      kicker: "ASSAY",
       paragraphs: [
-        "분지의 동전은 젖으면 무게가 늘고, 마르면 소리가 높아진다. 상인은 같은 동전을 아침과 밤에 다르게 센다.",
-        "공식 시세는 성채 게시판에, 실제 시세는 셰즈의 연기와 그레비티의 외상 수건에 따로 적힌다.",
-        "임시 문안. 화폐 단위와 물가 표는 이 단락을 표로 바꿔 채우면 된다."
+        "PULSE는 개인이 뿜어내는 마력 파동의 압력이자 계급장이다. 도덕성이나 인품 따위는 전혀 반영하지 않으며, 오직 \"저 여자가 화나면 골목이 몇 개 날아가는가\"를 1부터 9까지 정직하게 계측한 수치.",
+        "단, PULSE가 높을수록 고갈(갈증·냉각)이 찾아올 때의 반동도 끔찍해진다. 고등급 귀족이 한밤중에 체면 다 버리고 남의 손목이나 화로에 매달리는 추태를 목격하더라도, 목숨이 아깝다면 못 본 척 지나가는 게 분지의 예절이야!"
+      ],
+      grades: [
+        { roman: "I", feel: "평범한 서민. 감기만 걸려도 앓아눕는다.", en: "Civilian" },
+        { roman: "II", feel: "튼튼한 민간인. 무거운 짐은 제법 든다.", en: "Laborer" },
+        { roman: "III", feel: "초급 용병·장인. 뒷골목 시비쯤은 넘긴다.", en: "Apprentice" },
+        { roman: "IV", feel: "숙련된 현장직. 웬만한 하급 마수는 잡는다.", en: "Veteran" },
+        { roman: "V", feel: "외곽 탐사자. 험지에서 혼자 살아남는 수준.", en: "Tracker" },
+        { roman: "VI", feel: "정예 용병·이능력자. 괴물과 맨몸으로 맞붙는다.", en: "Vanguard" },
+        { roman: "VII", feel: "특급 전문가. 구역 하나를 통째로 주무른다.", en: "Master" },
+        { roman: "VIII", feel: "걸어 다니는 재앙. 제국 부대장·전설급 용병.", en: "Calamity" },
+        { roman: "IX", feel: "규격 외 괴물. 제국도 웬만하면 눈치를 본다.", en: "Sovereign" }
       ]
     },
     {
       no: "03",
-      title: "Wet & Dry 생리",
-      kicker: "HUMOURS",
+      title: "벨-아르카 분지",
+      kicker: "GEOGRAPHY",
       paragraphs: [
-        "Wet 는 기억을 표면에 남긴다. 잉크, 김, 이끼, 소문이 그 증거다. 몸이 젖은 쪽에 기우는 자는 남의 비밀을 옷감처럼 걸친다.",
-        "Dry 는 이름을 태우고 뼈대만 남긴다. 재, 균열, 열, 서약이 그 증거다. 마른 쪽에 기우는 자는 한 번의 마찰로 장부를 줄인다.",
-        "둘은 질병이 아니라 분지가 사람을 분류하는 기후다. 같은 혈통도 계절처럼 기울 수 있으나, 계측기는 오늘의 기울기만 적는다."
+        "거대한 화산 칼데라 바닥에 들어앉은 폐쇄형 증기 제국. 중앙의 거대 시계탑은 시간보다 습도와 기압을 알리는 데 더 바쁘며, 공식 지도는 우아한 동심원을 그리지만 실제 주민들은 \"어쩌라고\" 기분인 듯."
+      ],
+      places: [
+        { name: "크로스로드 & 황혼지구", text: "증기 배관과 선술집, 서커스단이 뒤엉킨 자유교역 중심지. 낮에는 상인들이 흥정을 벌이고, 밤에는 외상값과 비밀 정보가 거래된다." },
+        { name: "북쪽 첨탑고원 & 벨벳캐슬", text: "짙은 석탄 스모그 위에 우뚝 솟은 상류층 구역. 왕립 아카데미 분교와 제국 비룡기지가 자리해 있으며, 내려다보는 시선이 유독 서늘하다." },
+        { name: "지하수로", text: "도시 밑바닥을 가로지르는 습하고 어두운 미로. 밀수품과 무면허 외과, 고급 맞춤 의상실이 묘하게 공존하는 음지다." },
+        { name: "포자대삼림", text: "분지 외곽을 감싼 발광 버섯과 마정석의 숲. 공기가 축축하고 마법 함정이 널려 있어 길 잃은 여행자가 제일 많이 사라지는 곳이다." },
+        { name: "붉은 모래톱 협곡", text: "고대 유적과 마수가 들끓는 건조한 바위 지대. 낮에는 일광욕하는 렙틸리언을, 밤에는 난로 찾아 헤매는 용병들을 만날 수 있다." }
       ]
     },
     {
       no: "04",
-      title: "PULSE 등급",
-      kicker: "ASSAY",
-      gradeTable: true,
+      title: "화폐와 생존 매뉴얼",
+      kicker: "LEDGER",
       paragraphs: [
-        "PULSE 는 존재의 압력이다. 1은 거의 식은 심지, 9는 성좌가 함부로 다루지 않는 주권에 가깝다. 등급은 도덕이 아니라 계측값이다.",
-        "임시 등급명. 아래 표의 이름과 영문은 pulseGrades 에서 고친다."
+        "분지의 동전은 젖으면 묵직해지고 마르면 소리가 높아진다. 상인들은 같은 동전도 날씨와 손님의 행색에 따라 다르게 취급하는데, 화폐 역시 타고난 성질이 다르기 때문이다. 금은 찬 성질, 구리는 뜨거운 성질… 그런 거 들어 봤어? 같은 맥락이다."
+      ],
+      places: [
+        { name: "화폐 단위 (Silt → Drop → Lip)", text: "가장 작은 동화 실트 몇 닢이면 찌라시나 값싼 차를 사고, 은화 드롭 한두 개면 선술집의 뜨끈한 스튜와 유황 온욕탕 입장이 가능하다. 묵직한 금화 립 단위가 세 장 이상 오가기 시작하면 대개 합법적이지 않은 의뢰거나 목숨이 걸린 거래다." },
+        { name: "황동 전신 (Brass Telegraph)", text: "분지 전역의 배관을 타고 쇳소리를 내며 날아오는 쪽지 통신망. 빠르고 편리하지만, 가끔 배관 습기 때문에 잉크가 번져 고백 편지가 협박장으로 둔갑하기도 한다." },
+        { name: "생존 필수 시설", text: "Dry에게 겨울철 마정석 난로와 유황 온욕탕은 사치가 아니라 생명유지장치다. Wet 역시 정기적인 혈액팩 배급이나 합법적 파동 교류처를 확보해 두지 않으면, 어느 날 밤 모르는 사람 목덜미 앞에서 이성을 놓는 참사를 겪게 된다…" }
       ]
     },
     {
       no: "05",
-      title: "분지 속어 사전",
+      title: "벨-아르카 속어 사전",
       kicker: "LEXICON",
-      paragraphs: ["사전에 없는 말은 아직 거래되지 않은 말이다. 아래는 임시 표제어다."],
+      paragraphs: [
+        "제국 공식 사전에선 절대 찾을 수 없지만, 선술집에서 살아남으려면 필수적으로 외워야 하는 시정잡배 용어들. 원래 그 나라에 적응하려거든 욕부터 배우라잖아?"
+      ],
       entries: [
-        { term: "펄스", def: "사람이나 물건이 주변에 가하는 압력. 숫자로 말하면 등급, 속어로 말하면 존재감." },
-        { term: "젖은 장부", def: "공식 문서가 아니라, 지워도 번져 남는 기록. 주로 야간 장부국의 영역." },
-        { term: "마른 이름", def: "한 번 불리면 되물리지 않는 이름. 건조로와 용병 계약에서 자주 쓰인다." },
-        { term: "분지", def: "지명이자, 빠져나갈 수 없다는 말의 줄임. 바깥사람은 계곡이라 부르고, 안사람은 그릇이라 부른다." },
-        { term: "찌라시", def: "도장 없는 진실. 유통이 금지되어 있으므로 누구나 읽는다." },
-        { term: "계측", def: "오늘의 Wet/Dry 와 PULSE 를 바늘로 읽는 일. 사교인 척하는 심문." }
+        { term: "버블징어", en: "Bubblejinger", def: "몇백 살 먹은 장수종이나 중년 연상만 보면 눈이 돌아가는 연하를 부르는 멸칭. 본인들은 \"취향의 고도화\"라고 우긴다." },
+        { term: "가위손", en: "Scissor-hand", def: "연애나 접촉보다 칼질, 세공, 논문 같은 일에만 미쳐 있는 지독한 목석 워커홀릭. 옆에서 꼬셔도 공구만 쥐여준다. \"그런 가위손으로 여자친구랑 잘도 놀아 주겠다\"는 맥락으로 쓰인다." },
+        { term: "온열석", en: "Hot-rock", def: "겨울만 되면 Dry 종족의 체온과 근육에만 찰싹 달라붙어 떨어질 줄 모르는 Wet. 여름이 오면 귀신같이 연락이 끊긴다. 머나먼 대한민국에서 \"염장 커플\"이라고 부르는 것과 유사하다." },
+        { term: "이끼밭", en: "Moss-bed", def: "장수종 귀족이나 아카데미 교수의 빵빵한 후원에 기생해 호의호식하는 애인. 주로 벨벳캐슬 주변에서 목격된다." },
+        { term: "습지오리", en: "Damp-duck", def: "남의 파동이나 체온만 쏙 빼먹고 책임은 안 진 채 튀어버리는 악질 바람둥이. 선술집 외상 장부와 함께 단골로 욕을 먹는다. 요즈음 습지오리가 늘어나는 추세라는데, 아마도 경기 침체 때문이겠지." },
+        { term: "깡통", en: "Tin-can", def: "고상한 품위를 지킨다며 쇠 맛 나는 배급용 혈액팩만 고집하는 꽉 막힌 뱀파이어나 귀족을 비꼬는 말." }
       ]
     }
   ],
@@ -3145,14 +3204,30 @@ var DATA = {
     if (!dossier) closeSheet();
   }
 
+  function archiveRich(value) {
+    return escapeHtml(value)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/~~(.+?)~~/g, "<del>$1</del>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+  }
+
   function renderArchive() {
-    byId("archive-lead").textContent = (DATA.ui && DATA.ui.archiveLead) || "";
+    byId("archive-lead").innerHTML = archiveRich((DATA.ui && DATA.ui.archiveLead) || "");
     archiveMount.innerHTML = (DATA.archive || []).map(function (sec, index) {
       var body = "";
       (sec.paragraphs || []).forEach(function (paragraph) {
-        body += "<p>" + escapeHtml(paragraph) + "</p>";
+        body += "<p>" + archiveRich(paragraph) + "</p>";
       });
-      if (sec.gradeTable) {
+      (sec.places || []).forEach(function (place) {
+        body += '<div class="place"><b>' + escapeHtml(place.name || "") + "</b><p>" + archiveRich(place.text || "") + "</p></div>";
+      });
+      if (sec.grades && sec.grades.length) {
+        body += '<ol class="grade-list">';
+        sec.grades.forEach(function (grade) {
+          body += "<li><span>" + escapeHtml(grade.roman) + "</span><span>" + escapeHtml(grade.feel) + "</span><em>" + escapeHtml(grade.en) + "</em></li>";
+        });
+        body += "</ol>";
+      } else if (sec.gradeTable) {
         body += '<ol class="grade-list">';
         var n;
         for (n = 1; n <= 9; n += 1) {
@@ -3164,7 +3239,7 @@ var DATA = {
       if (sec.entries && sec.entries.length) {
         body += '<dl class="lex">';
         sec.entries.forEach(function (entry) {
-          body += "<dt>" + escapeHtml(entry.term) + "</dt><dd>" + escapeHtml(entry.def) + "</dd>";
+          body += "<dt>" + escapeHtml(entry.term) + (entry.en ? "<em>" + escapeHtml(entry.en) + "</em>" : "") + "</dt><dd>" + archiveRich(entry.def) + "</dd>";
         });
         body += "</dl>";
       }
