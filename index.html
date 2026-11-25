@@ -1516,6 +1516,17 @@
   }
   #pulse-body { padding: 8px 16px calc(24px + var(--safe-b)); }
   .q-kicker { color: var(--brass); margin: 12px 0 8px; }
+  .q-meter {
+    height: 2px;
+    margin: 0 0 12px;
+    background: rgba(140, 118, 76, 0.28);
+  }
+  .q-meter span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--brass);
+  }
   .q-prompt {
     font-family: var(--display-ko);
     font-size: 20px;
@@ -1589,6 +1600,8 @@
     font-size: 15px;
     line-height: 1.7;
   }
+  .trait.quirk { margin-top: 8px; color: var(--ink-dim); }
+  .cert .spec > div { grid-template-columns: 64px 1fr; }
   .copy-preview {
     margin-top: 12px;
     padding-top: 8px;
@@ -1596,7 +1609,8 @@
     font-size: 12px;
     line-height: 1.55;
     color: var(--ink-dim);
-    word-break: keep-all;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .cert-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
   .text-btn {
@@ -2504,80 +2518,200 @@ var DATA = {
     "8": { roman: "VIII", name: "임계", en: "Critical" },
     "9": { roman: "IX", name: "주권", en: "Sovereign" }
   },
-  traits: {
-    wet: {
-      low: "안개에 번진 잉크처럼, 당신은 젖은 기억을 오래 붙든다.",
-      mid: "분지의 습기가 판단 위에 얇은 막을 남긴다. 비밀이 옷깃에 맺힌다.",
-      high: "과포화된 맥. 가까이 선 자의 비밀이 물기처럼 묻어난다."
-    },
-    dry: {
-      low: "재가 되기 전의 온기. 이름은 아직 바삭하게 마르지 않았다.",
-      mid: "마른 바람 쪽의 사람. 불필요한 습기를 견디지 못한다.",
-      high: "임계에 가까운 건조. 한 번의 마찰로 장부가 탄다."
-    }
-  },
   quizMeta: {
-    basePulse: 4,
-    resultImage: "portrait",
-    tiePulseAtLeast: 5
+    advanceMs: 250
   },
   /*
-    문항 6. choice 필드:
-    wet, dry — 기후 점수
-    pulse — basePulse 에 더함 (음수 가능, 최종 1~9로 자름)
-    affinity — 인물 key 별 가산. 가장 높은 인물이 초기 인연.
-    동점이면 판정된 진영에 0.2, 그래도 같으면 명단 앞순서.
+    20문항 2지선다. 선택 후 advanceMs 뒤 다음 문항.
+    choice: axis WD|SI|CP|OK, val 양수=앞글자(W/S/C/O) 음수=뒷글자(D/I/P/K),
+    pulse 0|1, npc 호감 키, tag 있으면 첫 별명만 결과에 남는다.
+    등급 = clamp(round(1 + pulseRaw / 15 * 8), 1, 9). 동점 NPC는 아래 명단 앞순서.
   */
+  npcNames: {
+    velvet: "비에사 밀드레드",
+    valeria: "발레리아",
+    odile: "오딜",
+    shezu: "셰즈",
+    popori: "포포리",
+    awin: "아윈 유리레드",
+    kuora: "쿠오라",
+    sthildrune: "시실드룬",
+    grebuiftee: "그레비티",
+    zitoth: "지토트"
+  },
+  npcKeys: {
+    velvet: "viessa",
+    valeria: "valeria",
+    odile: "odile",
+    shezu: "shezu",
+    popori: "popori",
+    awin: "aywin",
+    kuora: "kuorath",
+    sthildrune: "sthildrune",
+    grebuiftee: "grebuiftee",
+    zitoth: "zitoth"
+  },
+  species: {
+    WSCO: { name: "서큐버스", summary: "연애도 논문으로 쓰는 지독한 이성주의자! 그러나 체면치레는 조금 없는 편이죠?", defaultQuirk: "뒷골목에선 은근히 연애를 논문으로 처리한다는 소문이 돈다.", traits: "감정·쾌락 파동 수확 / 장수종 / 고갈 시 극심한 갈증과 감각 과민", body: "창백하거나 붉은기 도는 피부, 악마형 뿔과 가느다란 꼬리, 시선을 끄는 눈매", ability: "접촉·시선으로 타인의 자율신경과 맥압을 자극해 파동 수확, 마력 감응력 우수", recPulse: "4~6" },
+    WICO: { name: "뱀파이어", summary: "웬만한 상황에서는 철칙을 준수하는 규정주의자지만, 남몰래 취향이 확고하다.", defaultQuirk: "뒷골목에선 은근히 철칙 뒤에 취향을 숨긴다는 소문이 돈다.", traits: "혈액 섭취(직접 흡혈 또는 혈액팩) / 장수종·야행성 / 고갈 시 시야 적화 및 포식 본능 각성", body: "핏기 없이 창백한 회백색 피부, 날카로운 송곳니, 서늘한 체온", ability: "원거리 혈류 감지, 혈액 무장 및 초인적 기동력, 뛰어난 신체 재생력", recPulse: "4~6" },
+    WICK: { name: "아라크네", summary: "남의 상처를 보듬어준다기보다는 처리해 주는 타입. 컨트롤 프릭일지도.", defaultQuirk: "뒷골목에선 은근히 상처를 보듬는 대신 처리해 버린다는 소문이 돈다.", traits: "생체 거미줄 생성 / 음지·폐쇄 공간 선호 / 고갈 시 실샘 경직 및 관절 마찰", body: "창백한 상반신, 복수의 검은 눈동자, 견고하고 각진 외골격의 거미 하반신", ability: "강철 수준의 생체 거미줄로 봉합·속박·마력 전도, 마비 독침, 접촉 시 체온·긴장 파동 수확", recPulse: "4~6" },
+    WSCK: { name: "섀도우본", summary: "남의 비밀을 가지고 놀리며 즐거워하는 당신! 하지만 은근히 온기에 약하다.", defaultQuirk: "뒷골목에선 은근히 비밀로 놀면서도 온기엔 약하다는 소문이 돈다.", traits: "그림자 동화 / 시선·긴장 파동 수확 / 고갈 시 윤곽 연기화 및 촉각·체온 상실", body: "연기처럼 일렁이는 잿빛 창백 피부, 어두운 공막, 그림자와 경계가 흐린 실루엣", ability: "그림자 촉수 및 분신 실체화, 제한적 공간 왜곡·환영술, 은신 및 첩보 특화", recPulse: "4~6" },
+    WIPK: { name: "뮤타파", summary: "진지한 눈빛으로 헛소리하는 맑눈광 당신. 삐칠 때는 누군가 안아 주길 바랄지도.", defaultQuirk: "뒷골목에선 은근히 진지한 얼굴로 헛소리를 한다는 소문이 돈다.", traits: "자유 생체 변형 / 감정 파동(당황·호기심) 수확 / 고갈 시 형체 불안정 및 점액화", body: "유연하고 경계가 모호한 피부, 흙·이끼 등 자연물에 쉽게 동화되는 체질, 초점 없는 깊은 눈동자", ability: "소형 생물 의태 및 신체 국소 변형, 물리적 타격 흡수, 환경 위장", recPulse: "3~5" },
+    WSPK: { name: "픽시", summary: "남의 당황과 호기심을 빨아먹고 사는 소형 재앙. 가만히 있으면 병이 날 것처럼 근질거려.", defaultQuirk: "뒷골목에선 은근히 남의 당황을 먹고 산다는 소문이 돈다.", traits: "소형 체구·비행 / 호기심·장난 파동 수확 / 고갈 시 날개 인분 탈락 및 극심한 무기력", body: "아담하고 가벼운 체형, 반투명한 곤충형 날개, 빛을 반사하는 홍채와 뾰족한 귀", ability: "저공 고속 비행, 소규모 환각·착시 유발, 미세한 마력 가루를 이용한 교란", recPulse: "2~4" },
+    WSPO: { name: "세이렌 (인어)", persona: "세이렌", summary: "우아한 목소리로 군중을 홀리며 외향적이지만, 구역 침범엔 가차 없는 입체적 법관.", defaultQuirk: "뒷골목에선 은근히 우아한 목소리로 구역을 지킨다는 소문이 돈다.", traits: "수중·습지 적응 / 청각·공명 파동 수확 / 고갈 시 성대 건조 및 피부 비늘화 진행", body: "물기 어린 매끄러운 피부, 귀와 목덜미의 미세한 아가미·지느러미 흔적, 깊은 청록·진주빛 눈동자", ability: "특정 주파수의 목소리로 타인의 평형감각·감정 교란, 수압 및 주변 습기 감지", recPulse: "4~6" },
+    WIPO: { name: "다크엘프", summary: "그늘 속에서 칼을 가는 냉혹한 현실주의자인 당신. 내 여자에게 매몰되어 윤리를 잊지 마!", defaultQuirk: "뒷골목에선 은근히 그늘에서 칼을 간다는 소문이 돈다.", traits: "지하·야간 적응 / 공포·긴장 파동 수확 / 고갈 시 극심한 안구 통증 및 마력 역류", body: "짙은 흑갈색 또는 잿빛이 도는 어두운 피부, 길고 뾰족한 귀, 어둠 속에서도 선명한 백발·은발 계열", ability: "암시야 및 은밀 기동, 독·저주 계통 술식 운용, 암살 및 정보전 특화", recPulse: "4~6" },
+    DICK: { name: "하이엘프", summary: "말보다 손이 빠르고 입은 더 험한 장인. 사실은 자존심보다 따끈해지고 싶은 거지.", defaultQuirk: "뒷골목에선 은근히 험한 입 뒤에 온기를 찾는다는 소문이 돈다.", traits: "장수종 / 체온 연소형 정밀 술식 / 고갈 시 손목 경직·체온 급강하·각혈", body: "창백하고 마른 체형, 길고 뾰족한 귀, 마정석 가루나 작업 흔적이 배기 쉬운 섬세한 손", ability: "체온과 생명을 태워 초정밀 세공·술식 각인, 다중 마법 함정 구축", recPulse: "4~6" },
+    DSPK: { name: "하프오크", summary: "덩치는 산만 한데 속은 들꽃처럼 여린 순정파. 친절이 가끔 물리력으로 번역된다. 냥냥펀치가 위험해!", defaultQuirk: "뒷골목에선 은근히 산만 한 덩치에 들꽃 속을 숨긴다는 소문이 돈다.", traits: "압도적 근력·맷집 / 고열량 대사 / 고갈 시 대사 고갈·저체온증·극심한 허기", body: "잿빛 녹색 또는 구릿빛의 탄탄한 피부, 큰 신장과 두꺼운 골격, 살짝 드러나는 아랫송곳니", ability: "체온 대사를 폭발적으로 태워 초인적 완력과 지구력 발휘, 예민한 위협 감지 본능", recPulse: "4~6" },
+    DIPK: { name: "렙틸리언", summary: "다정함을 열량으로 환산하는 야생의 실용주의자. 내 것도 내 것이고 남의 것도 내 것이라는 마음은 고쳐.", defaultQuirk: "뒷골목에선 은근히 다정함도 열량으로 계산한다는 소문이 돈다.", traits: "변온 생리 / 외부 열원 의존 / 고갈 시 관절 경직 및 강제 동면 전조", body: "모래빛·녹색 계열의 비늘이 섞인 탄탄한 피부, 세로 동공, 균형을 잡는 긴 비늘 꼬리", ability: "열감지 및 지면 진동 포착, 험지·절벽 고속 기동 및 매복 저격 특화", recPulse: "3~5" },
+    DSPO: { name: "드워프", summary: "욕하면서 스튜 한 그릇 더 퍼주는 호쾌한 의리파. 누군가가 돈을 빌려 달라고 하면 속아넘어가지 마!", defaultQuirk: "뒷골목에선 은근히 욕하면서 스튜를 더 퍼 준다는 소문이 돈다.", traits: "고밀도 근골격 / 화기·열기 친화 / 고갈 시 관절 석회화 경직 및 뼛속 한기", body: "아담하지만 단단하게 다져진 체구, 그을린 피부, 굵고 거친 손마디와 풍성한 모발", ability: "고밀도 근력과 열량 증폭을 통한 중장비·둔기 운용, 물리 충격 흡수 및 대장·공예 기술", recPulse: "4~6" },
+    DIPO: { name: "가고일", summary: "비바람을 묵묵히 버티는 성벽 같은 우직함. 받은 만큼 돌려주기를 바라는 당신, 누군가는 알고 있을 거야.", defaultQuirk: "뒷골목에선 은근히 받은 온기를 묵묵히 기억한다는 소문이 돈다.", traits: "석질 피부·초고내구 / 장수종 / 고갈 시 관절 석화(돌 갈리는 소리) 및 조각상화", body: "회색 대리석·화강암 질감의 피부, 단단한 뿔과 거대한 석질 날개·돌꼬리, 방치 시 어깨에 끼는 이끼", ability: "대리석 피부 경화(참격·충격 방호), 건축물 진동 및 적의 감지, 압도적 방어력", recPulse: "5~7" },
+    DSCO: { name: "인간", summary: "짧고 굵은 삶 화끈하게 살아보자. 제국의 판을 읽는 생존왕. 결국 제일 무서운 건 평범한 인간이다.", defaultQuirk: "뒷골목에선 은근히 평범한 인간이 제일 무섭다는 소문이 돈다.", traits: "단명종·높은 적응력 / 마정석 도구 의존 / 고갈 시 극심한 피로·면역력 저하", body: "이형 기관 없는 평범한 외형, 분지 기후와 노동에 단련된 체질, 다양한 피부·모발색", ability: "고유 마력량은 낮으나 마정석 공학·화기·협상·전술 등 외부 도구와 시스템 활용에 최적화", recPulse: "1~3" },
+    DICO: { name: "하피", summary: "높은 곳에서 아래를 내려다보는 결벽적 영역주의자. 공중전과 텃세에 능하니, 너무 휘두르고 다니진 마.", defaultQuirk: "뒷골목에선 은근히 높은 곳에서 텃세를 부린다는 소문이 돈다.", traits: "공중 영역 본능 / 고속 대사·저체중 / 고갈 시 깃털 탈락·비행 불가 및 저체온", body: "가볍고 날렵한 골격, 커다란 깃털 날개, 예리한 맹금류형 눈매와 날카로운 발톱", ability: "기류를 타는 고속 활강 및 급강하 기습, 장거리 시야 확보, 공중 정찰 및 운송 특화", recPulse: "3~5" },
+    DSCK: { name: "펠리드 (고양이 수인)", persona: "펠리드", summary: "눈치 백 단에 기분파인 뒷골목 자유영혼. 따뜻한 햇볕과 공짜 밥엔 약하다.", defaultQuirk: "뒷골목에선 은근히 햇볕과 공짜 밥에 약하다는 소문이 돈다.", traits: "민첩·야행성 / 단기 폭발 연소 / 고갈 시 급격한 수면 욕구 및 체온 저하", body: "유연한 체형, 머리 위 고양이 귀와 균형을 잡는 긴 꼬리, 어둠 속에서 빛나는 세로 동공", ability: "무소음 이동 및 도약력, 예민한 청각·후각과 반사신경, 단거리 추격·잠입 특화", recPulse: "2~4" }
+  },
   quiz: [
     {
-      prompt: "분지에 첫발을 디딘 밤, 당신이 먼저 맡는 것은?",
+      prompt: "한겨울 새벽, 벨-아르카 분지에 폭설이 내렸다. 눈 뜨자마자 드는 감각은?",
       choices: [
-        { label: "젖은 돌과, 아직 마르지 않은 장부 냄새.", wet: 2, dry: 0, pulse: 0, affinity: { viessa: 5, valeria: 1 } },
-        { label: "마른 먼지와, 오래 쓴 쇠의 냄새.", wet: 0, dry: 2, pulse: 1, affinity: { kuorath: 5, sthildrune: 1 } },
-        { label: "식어 가는 램프 기름.", wet: 1, dry: 1, pulse: -1, affinity: { aywin: 5 } }
+        { label: "공기가 차서 머리는 맑은데, 목덜미가 바짝 마르는 것 같다.", axis: "WD", val: 1, pulse: 1, npc: "velvet" },
+        { label: "손끝부터 얼어붙어 춥다! 당장 담요나 뜨거운 포옹이 시급하다.", axis: "WD", val: -1, pulse: 0, npc: "sthildrune" }
       ]
     },
     {
-      prompt: "주머니를 뒤집으면 무엇이 남는가?",
+      prompt: "오랜만에 의뢰가 비는 휴일 저녁, 당신의 발걸음이 향하는 곳은?",
       choices: [
-        { label: "훈장에서 떨어진 핀.", wet: 1, dry: 0, pulse: 2, affinity: { valeria: 5, viessa: 1 } },
-        { label: "치수 재는 핀과, 끊어진 실.", wet: 2, dry: 0, pulse: -1, affinity: { odile: 5, shezu: 1 } },
-        { label: "모래가 든 장갑.", wet: 0, dry: 2, pulse: 1, affinity: { sthildrune: 5, zitoth: 1 } }
+        { label: "북적이는 선술집이나 서커스 천막. 사람 구경과 뒷담화가 최고다.", axis: "SI", val: 1, pulse: 0, npc: "shezu" },
+        { label: "누구도 찾아오지 않는 나만의 거처. 문 걸어 잠그고 쉬어야 진짜 휴식이다.", axis: "SI", val: -1, pulse: 1, npc: "awin" }
       ]
     },
     {
-      prompt: "골목에서 발을 멈추게 하는 것은?",
+      prompt: "골목에서 시비 건 취객이 주먹을 날려온다. 당신의 첫 반응은?",
       choices: [
-        { label: "입을 꿰맨 자가 흘리는 소문.", wet: 1, dry: 0, pulse: -1, affinity: { shezu: 5, grebuiftee: 1 } },
-        { label: "어린 포자 냄새. 숲이 여기까지 왔다.", wet: 2, dry: 0, pulse: -1, affinity: { popori: 5, odile: 1 } },
-        { label: "금 간 돌이 지키는 침묵.", wet: 0, dry: 1, pulse: 1, affinity: { zitoth: 5, kuorath: 1 } }
+        { label: "발밑 각도와 무게중심을 계산해 빈틈으로 공격하거나 도망치자!", axis: "CP", val: 1, pulse: 1, npc: "odile" },
+        { label: "계산할 시간에 몸이 먼저 나간다. 일단 저지르고 생각하자.", axis: "CP", val: -1, pulse: 1, npc: "grebuiftee" }
       ]
     },
     {
-      prompt: "당신 이름으로 철하려면 무엇을 적겠는가?",
+      prompt: "제국 관료가 말도 안 되는 통행세를 요구한다. 어떻게 넘길까?",
       choices: [
-        { label: "난로 옆의 빈 자리.", wet: 0, dry: 1, pulse: 0, affinity: { grebuiftee: 5, aywin: 1 } },
-        { label: "조서의 여백. 아직 서명되지 않은 줄.", wet: 1, dry: 0, pulse: 1, affinity: { viessa: 2 } },
-        { label: "아무도 서명하지 않은 여백.", wet: 1, dry: 1, pulse: 0, affinity: { zitoth: 1, popori: 1 } }
+        { label: "법전 조항과 서류 허점을 읊어 합법적으로 관두게 한다.", axis: "OK", val: 1, pulse: 1, npc: "valeria" },
+        { label: "웃으며 가짜 동전을 쥐여주거나, 눈 돌린 틈에 뒷골목으로 튄다.", axis: "OK", val: -1, pulse: 0, npc: "popori" }
       ]
     },
     {
-      prompt: "질문을 받으면 어떻게 답하는가?",
+      prompt: "유독 지친 날, 기력을 회복하는 나만의 확실한 방법은?",
       choices: [
-        { label: "조문처럼, 짧고 회수되지 않게.", wet: 1, dry: 0, pulse: 1, affinity: { valeria: 2 } },
-        { label: "농담으로 장부를 가린다.", wet: 1, dry: 1, pulse: 0, affinity: { grebuiftee: 1, shezu: 1 } },
-        { label: "거의 말하지 않는다.", wet: 0, dry: 1, pulse: 1, affinity: { sthildrune: 1, zitoth: 1 } }
+        { label: "누군가의 다정함, 대화의 긴장감, 혹은 가까운 숨결 안에 만족한다.", axis: "WD", val: 1, pulse: 1, npc: "shezu" },
+        { label: "김이 모락모락 나는 고기 스튜를 배 터지게 먹고 뜨거운 온욕탕에 몸을 담근다.", axis: "WD", val: -1, pulse: 0, npc: "kuora" }
       ]
     },
     {
-      prompt: "유리관 앞에서 당신의 손은?",
+      prompt: "낯선 이가 다가와 \"혹시 길 좀 아시나요?\"라고 말을 걸어온다.",
       choices: [
-        { label: "푸른 불을 병에 담는다.", wet: 1, dry: 1, pulse: 1, affinity: { aywin: 1 } },
-        { label: "비를 받아, 적히게 둔다.", wet: 2, dry: 0, pulse: 0, affinity: { popori: 1, odile: 1, viessa: 1 } },
-        { label: "금속이 기억할 때까지 친다.", wet: 0, dry: 2, pulse: 2, affinity: { kuorath: 1, sthildrune: 1 } }
+        { label: "어 나 거기 알아! 목적지 근처 맛집과 조심할 골목까지 친절히 알려준다.", axis: "SI", val: 1, pulse: 0, npc: "kuora" },
+        { label: "손가락으로 방향만 짧게 가리키고, 더 말 걸기 전에 빠르게 자리를 뜬다.", axis: "SI", val: -1, pulse: 0, npc: "zitoth" }
+      ]
+    },
+    {
+      prompt: "의뢰 보수로 묵직한 금화 3립이 생겼다. 가장 먼저 할 일은?",
+      choices: [
+        { label: "고급 마정석, 정보 구매, 혹은 장비 업그레이드에 철저히 재투자한다. 리치해질 테다.", axis: "CP", val: 1, pulse: 1, npc: "velvet", tag: "가위손" },
+        { label: "지금 당장 끌리는 비싼 술, 예쁜 리본을 사거나 마음에 드는 이에게 한턱 쏜다.", axis: "CP", val: -1, pulse: 0, npc: "grebuiftee" }
+      ]
+    },
+    {
+      prompt: "선술집에서 누군가 \"외상값 갚아!\"라며 난동을 부려 데이트가 깨졌다.",
+      choices: [
+        { label: "질서가 무너지는 꼴은 못 본다. 직접 나서서 난동꾼을 정리한다.", axis: "OK", val: 1, pulse: 1, npc: "zitoth" },
+        { label: "팝콘 각이다. 구석 테이블로 술잔을 옮기고 누가 이기나 구경한다.", axis: "OK", val: -1, pulse: 0, npc: "shezu" }
+      ]
+    },
+    {
+      prompt: "연인이나 파트너와 함께 있을 때, 무의식중에 더 집착하게 되는 요소는?",
+      choices: [
+        { label: "상대의 맥박, 빨라지는 호흡, 내 손끝에 반응하는 표정의 미세한 변화가 귀여워.", axis: "WD", val: 1, pulse: 1, npc: "valeria" },
+        { label: "서로 맞닿은 피부의 묵직한 온기, 안겼을 때 느껴지는 단단한 체온이 기분 좋아.", axis: "WD", val: -1, pulse: 0, npc: "kuora", tag: "온열석" }
+      ]
+    },
+    {
+      prompt: "위험한 외곽 유적 탐사 의뢰가 들어왔다. 팀원을 꾸린다면?",
+      choices: [
+        { label: "믿을 만한 동료 서넛과 역할을 나눠 등 뒤를 맡기는 게 안전하다.", axis: "SI", val: 1, pulse: 0, npc: "grebuiftee" },
+        { label: "남 챙기다 내가 죽는다. 보수도 독식할 겸 혼자 다녀오는 게 속 편하다.", axis: "SI", val: -1, pulse: 1, npc: "sthildrune" }
+      ]
+    },
+    {
+      prompt: "누군가 당신에게 진지하게 호감을 고백해 왔다. 머릿속 첫 생각은?",
+      choices: [
+        { label: "이 사람이 나한테 원하는 게 뭐지? 난 이 사람을 감당할 수 있나?", axis: "CP", val: 1, pulse: 1, npc: "odile" },
+        { label: "심장이 먼저 반응하면 일단 받아들이고 본다.", axis: "CP", val: -1, pulse: 0, npc: "popori" }
+      ]
+    },
+    {
+      prompt: "약속 시각에 상대방이 15분째 나타나지 않고 있다.",
+      choices: [
+        { label: "15분은 무례의 영역이다. 연락한 뒤 바로 다음 일정을 짠다.", axis: "OK", val: 1, pulse: 1, npc: "velvet" },
+        { label: "뭐, 오는 길에 길고양이라도 만났겠지. 주변 구경하며 느긋하게 기다린다.", axis: "OK", val: -1, pulse: 0, npc: "kuora" }
+      ]
+    },
+    {
+      prompt: "피로의 전조가 찾아와 정신이 아찔해졌다. 어떤 증상인가?",
+      choices: [
+        { label: "감각이 흐릿해지며, 일단 뭔가 안 먹으면 죽겠다.", axis: "WD", val: 1, pulse: 1, npc: "odile" },
+        { label: "으슬으슬하다. 잠부터 자고 생각해야겠다.", axis: "WD", val: -1, pulse: 1, npc: "awin" }
+      ]
+    },
+    {
+      prompt: "\"오늘 밤 비밀 파티에 초대합니다\"라는 쪽지가 날아왔다.",
+      choices: [
+        { label: "재미있겠는데? 제일 괜찮은 옷을 골라 입고 기꺼이 얼굴을 비춘다.", axis: "SI", val: 1, pulse: 1, npc: "velvet", tag: "이끼밭" },
+        { label: "귀찮고 수상하다. 쪽지를 구겨 난로에 던져 넣고 일찍 잠자리에 든다.", axis: "SI", val: -1, pulse: 0, npc: "valeria" }
+      ]
+    },
+    {
+      prompt: "정체불명의 고대 유물을 주웠다. 당신의 사용법은?",
+      choices: [
+        { label: "꼼꼼히 해독하기 전까진 절대 함부로 건드리지 않아!", axis: "CP", val: 1, pulse: 1, npc: "awin" },
+        { label: "일단 툭툭 두드려보거나 살짝 열어 무슨 일이 벌어지는지 본다.", axis: "CP", val: -1, pulse: 0, npc: "popori" }
+      ]
+    },
+    {
+      prompt: "일할 때 나만의 작업 스타일을 한마디로 요약하자면?",
+      choices: [
+        { label: "정해진 매뉴얼과 완벽한 마감이 생명.", axis: "OK", val: 1, pulse: 1, npc: "valeria", tag: "깡통" },
+        { label: "결과만 끝내주면 과정은 내 마음대로.", axis: "OK", val: -1, pulse: 1, npc: "awin" }
+      ]
+    },
+    {
+      prompt: "당신이 유독 약한, 혹은 자꾸 시선이 가는 상대의 타입은?",
+      choices: [
+        { label: "여유롭고 어른스러우며, 나를 내려다보는 듯한 치명적인 장수종 연상.", axis: "WD", val: 1, pulse: 0, npc: "velvet", tag: "버블징어" },
+        { label: "무뚝뚝하거나 엉뚱해도, 곁에 있으면 묘하게 안심되는 안정적인 사람.", axis: "WD", val: -1, pulse: 0, npc: "zitoth" }
+      ]
+    },
+    {
+      prompt: "뒷골목 찌라시에 당신에 대한 황당한 헛소문이 실렸다.",
+      choices: [
+        { label: "오히려 홍보돼서 좋은데? 더 그럴싸한 소문을 보탠다.", axis: "SI", val: 1, pulse: 0, npc: "grebuiftee", tag: "습지오리" },
+        { label: "남들이 나를 뭐라 떠들든 상관없다.", axis: "SI", val: -1, pulse: 0, npc: "odile" }
+      ]
+    },
+    {
+      prompt: "거대한 마수와 정면으로 마주쳤다. 살아남기 위해 꺼내 드는 무기는?",
+      choices: [
+        { label: "미리 깔아둔 함정, 독, 혹은 약점을 정확히 꿰뚫는 정밀한 기술.", axis: "CP", val: 1, pulse: 1, npc: "sthildrune" },
+        { label: "압도적인 완력, 화력, 혹은 상대를 찍어 누르는 순수한 야성.", axis: "CP", val: -1, pulse: 1, npc: "zitoth" }
+      ]
+    },
+    {
+      prompt: "크로스로드라는 지독한 도시에서 당신이 꿈꾸는 최종 목표는?",
+      choices: [
+        { label: "제국의 질서와 계급 안에서 누구도 함부로 못 건드리는 확고한 지위를 얻는 것.", axis: "OK", val: 1, pulse: 1, npc: "sthildrune" },
+        { label: "누구의 소유도 되지 않고, 분지의 틈새를 내 발로 자유롭게 누비며 사는 것.", axis: "OK", val: -1, pulse: 0, npc: "shezu" }
       ]
     }
   ]
+
 };
 </script>
 
@@ -2646,6 +2780,7 @@ var DATA = {
 
   var typer = { text: "", i: 0, done: true, timer: 0, paused: false };
   var quiz = freshQuiz();
+  var quizTimer = 0;
 
   function byId(id) { return document.getElementById(id); }
   function pad(n) {
@@ -3258,32 +3393,74 @@ var DATA = {
   }
 
   function freshQuiz() {
-    var affinity = {};
-    rosterKeys().forEach(function (key) { affinity[key] = 0; });
-    return { index: 0, wet: 0, dry: 0, pulse: 0, affinity: affinity, started: false, finished: false, locked: false };
+    return { index: 0, answers: [], started: false, finished: false, locked: false };
   }
 
-  function currentPulse() {
-    var base = (DATA.quizMeta && DATA.quizMeta.basePulse) || 4;
-    return clamp(base + quiz.pulse, 1, 9);
+  function scoreAnswers(answers) {
+    var axes = { WD: 0, SI: 0, CP: 0, OK: 0 };
+    var pulseRaw = 0;
+    var npcScores = {};
+    Object.keys(DATA.npcNames || {}).forEach(function (key) { npcScores[key] = 0; });
+    var slangTags = [];
+    (answers || []).forEach(function (ans) {
+      if (ans.axis && Object.prototype.hasOwnProperty.call(axes, ans.axis)) axes[ans.axis] += ans.val || 0;
+      pulseRaw += ans.pulse || 0;
+      if (ans.npc && Object.prototype.hasOwnProperty.call(npcScores, ans.npc)) npcScores[ans.npc] += 1;
+      if (ans.tag) slangTags.push(ans.tag);
+    });
+    var code =
+      (axes.WD > 0 ? "W" : "D") +
+      (axes.SI > 0 ? "S" : "I") +
+      (axes.CP > 0 ? "C" : "P") +
+      (axes.OK > 0 ? "O" : "K");
+    var species = (DATA.species && DATA.species[code]) || { name: code, summary: "", defaultQuirk: "" };
+    var physiology = axes.WD > 0 ? "Wet(습성)" : "Dry(건성)";
+    var pulseGrade = clamp(Math.round(1 + (pulseRaw / 15) * 8), 1, 9);
+    var keys = Object.keys(npcScores);
+    var bestNpcKey = keys.reduce(function (a, b) {
+      return npcScores[a] >= npcScores[b] ? a : b;
+    }, keys[0]);
+    var bestNpcName = (DATA.npcNames && DATA.npcNames[bestNpcKey]) || "";
+    var quirkText = slangTags.length
+      ? "뒷골목에선 은근히 '" + slangTags[0] + "' 기질이 있다는 소문이 돈다."
+      : (species.defaultQuirk || "");
+    var copyPhys = axes.WD > 0 ? "Wet" : "Dry";
+    var copyString = [
+      "- 종족: " + (species.persona || species.name) + " (" + copyPhys + ")",
+      "- 특성: " + (species.traits || ""),
+      "- 신체 특징: " + (species.body || ""),
+      "- 능력 특징: " + (species.ability || ""),
+      "- PULSE: 시작 시 " + (species.recPulse || "") + " 추천"
+    ].join("\n");
+    return {
+      code: code,
+      species: species,
+      physiology: physiology,
+      pulseGrade: pulseGrade,
+      pulseRaw: pulseRaw,
+      axes: axes,
+      bestNpcKey: bestNpcKey,
+      bestNpcName: bestNpcName,
+      quirkText: quirkText,
+      copyString: copyString
+    };
   }
 
   function updateGaugeReadout() {
-    var pulseValue = currentPulse();
-    var grade = gradeOf(pulseValue);
+    var live = quiz.finished && lastResult ? lastResult : scoreAnswers(quiz.answers);
+    var grade = gradeOf(live.pulseGrade);
     var circ = 88;
-    pulseRing.style.strokeDashoffset = String(circ * (1 - pulseValue / 9));
-    pulseRing.style.stroke = quiz.dry > quiz.wet ? "#B86F28" : "#1E4D54";
-    pulseReadout.textContent = "W " + pad(quiz.wet) + "    D " + pad(quiz.dry) + "    PULSE " + grade.roman;
+    pulseRing.style.strokeDashoffset = String(circ * (1 - live.pulseGrade / 9));
+    pulseRing.style.stroke = live.axes.WD < 0 ? "#B86F28" : "#1E4D54";
+    pulseReadout.textContent = quiz.finished ? (live.code + "    PULSE " + grade.roman) : ("PULSE " + grade.roman + " · " + grade.name);
   }
 
   function startGaugeLoop() {
     stopGaugeLoop();
     function frame(t) {
-      var pulseValue = currentPulse();
-      var sum = quiz.wet + quiz.dry;
-      var balance = sum === 0 ? 0 : (quiz.dry - quiz.wet) / sum;
-      var tremor = reduceMotion ? 0 : (pulseValue / 9) * 1.7 * Math.sin(t / 78);
+      var live = quiz.finished && lastResult ? lastResult : scoreAnswers(quiz.answers);
+      var balance = -(live.axes.WD / 5);
+      var tremor = reduceMotion ? 0 : (live.pulseGrade / 9) * 1.7 * Math.sin(t / 78);
       var angle = balance * 72 + tremor;
       gaugeNeedle.setAttribute("transform", "rotate(" + angle.toFixed(2) + " 120 118)");
       gaugeRaf = requestAnimationFrame(frame);
@@ -3295,23 +3472,36 @@ var DATA = {
     gaugeRaf = 0;
   }
 
+  function specRow(label, value) {
+    return "<div><dt>" + escapeHtml(label) + "</dt><dd>" + escapeHtml(value) + "</dd></div>";
+  }
+
+  function scrollPulseTop() {
+    var panel = pulse.querySelector(".pulse-panel");
+    if (panel) panel.scrollTop = 0;
+  }
+
   function renderQuestion() {
     var item = DATA.quiz[quiz.index];
     if (!item) { renderResult(); return; }
     var total = DATA.quiz.length;
+    var letters = ["A", "B", "C", "D"];
     var choices = (item.choices || []).map(function (choice, index) {
       return (
         '<button type="button" class="choice" data-choice="' + index + '">' +
-          '<span class="choice-idx">' + pad(index + 1) + "</span>" +
+          '<span class="choice-idx">' + letters[index] + "</span>" +
           "<span>" + escapeHtml(choice.label) + "</span>" +
         "</button>"
       );
     }).join("");
+    var filled = total ? ((quiz.index) / total) * 100 : 0;
     pulseBody.innerHTML =
       '<p class="caps q-kicker">' + pad(quiz.index + 1) + " / " + pad(total) + "</p>" +
+      '<div class="q-meter" aria-hidden="true"><span style="width:' + filled.toFixed(2) + '%"></span></div>' +
       '<h2 class="q-prompt">' + escapeHtml(item.prompt) + "</h2>" +
       '<div class="q-choices">' + choices + "</div>";
     updateGaugeReadout();
+    scrollPulseTop();
   }
 
   function choose(index) {
@@ -3320,67 +3510,38 @@ var DATA = {
     if (!item || !item.choices || !item.choices[index]) return;
     quiz.locked = true;
     var choice = item.choices[index];
-    quiz.wet += choice.wet || 0;
-    quiz.dry += choice.dry || 0;
-    quiz.pulse += choice.pulse || 0;
-    Object.keys(choice.affinity || {}).forEach(function (key) {
-      quiz.affinity[key] = (quiz.affinity[key] || 0) + choice.affinity[key];
+    quiz.answers.push({
+      axis: choice.axis,
+      val: choice.val,
+      pulse: choice.pulse || 0,
+      npc: choice.npc || "",
+      tag: choice.tag || ""
     });
     var button = pulseBody.querySelector('[data-choice="' + index + '"]');
     if (button) button.classList.add("is-picked");
+    pulseBody.querySelectorAll(".choice").forEach(function (el) { el.disabled = true; });
     updateGaugeReadout();
-    setTimeout(function () {
+    var wait = (DATA.quizMeta && DATA.quizMeta.advanceMs) || 250;
+    clearTimeout(quizTimer);
+    quizTimer = setTimeout(function () {
+      quizTimer = 0;
       quiz.locked = false;
       quiz.index += 1;
       if (quiz.index >= DATA.quiz.length) renderResult();
       else renderQuestion();
-    }, reduceMotion ? 20 : 420);
-  }
-
-  function computeResult() {
-    var pulseValue = currentPulse();
-    var tieAt = (DATA.quizMeta && DATA.quizMeta.tiePulseAtLeast) || 5;
-    var faction;
-    if (quiz.wet === quiz.dry) faction = pulseValue >= tieAt ? "dry" : "wet";
-    else faction = quiz.wet > quiz.dry ? "wet" : "dry";
-    var bestKey = rosterKeys()[0];
-    var bestScore = -1e9;
-    rosterKeys().forEach(function (key) {
-      var character = DATA.characters[key];
-      if (!character) return;
-      var score = quiz.affinity[key] || 0;
-      if (character.faction === faction) score += 0.2;
-      if (score > bestScore) {
-        bestScore = score;
-        bestKey = key;
-      }
-    });
-    var band = pulseValue <= 3 ? "low" : (pulseValue <= 6 ? "mid" : "high");
-    var trait = (DATA.traits[faction] && DATA.traits[faction][band]) || "";
-    return {
-      faction: faction,
-      pulse: pulseValue,
-      grade: gradeOf(pulseValue),
-      npc: DATA.characters[bestKey],
-      trait: trait
-    };
-  }
-
-  function resultLine(result) {
-    var factionText = result.faction === "wet" ? "WET" : "DRY";
-    var pulseText = result.grade.roman + " · " + result.grade.name;
-    return "[종족 성향: " + factionText + " / PULSE 등급: " + pulseText + " / 특징: " + result.trait + " / 초기 인연 추천: " + (result.npc ? result.npc.name : "") + "]";
+    }, wait);
   }
 
   function renderResult() {
     quiz.finished = true;
-    var result = computeResult();
+    quiz.locked = false;
+    var result = scoreAnswers(quiz.answers);
     lastResult = result;
-    var imageKind = (DATA.quizMeta && DATA.quizMeta.resultImage) || "portrait";
-    if (imageKind !== "portrait" && imageKind !== "sticker") imageKind = "portrait";
-    var assets = (result.npc && ASSET_CONFIG.characters[result.npc.key]) || {};
-    var factionText = result.faction === "wet" ? "WET · 습성" : "DRY · 건성";
-    var line = resultLine(result);
+    var charKey = (DATA.npcKeys && DATA.npcKeys[result.bestNpcKey]) || "";
+    var npc = DATA.characters[charKey];
+    var grade = gradeOf(result.pulseGrade);
+    var assets = (npc && ASSET_CONFIG.characters[npc.key]) || {};
+    var line = result.copyString;
     pulseBody.innerHTML =
       '<article class="cert" id="cert">' +
         '<svg class="seal" viewBox="0 0 120 120" aria-hidden="true">' +
@@ -3391,24 +3552,27 @@ var DATA = {
           '<text x="60" y="64" text-anchor="middle" fill="#8C764C" font-size="11" font-family="Cinzel, serif">PULSE</text>' +
         "</svg>" +
         '<p class="caps cert-kicker">Imperial Assay</p>' +
-        "<h2>간이 신원 감정서</h2>" +
-        '<p class="latin">Field impression, not a decree.</p>' +
+        "<h2>" + escapeHtml(result.species.name) + "</h2>" +
+        '<p class="latin">' + escapeHtml(result.code + " · " + result.physiology) + "</p>" +
+        '<p class="trait">' + escapeHtml(result.species.summary) + "</p>" +
+        '<p class="trait quirk">' + escapeHtml(result.quirkText) + "</p>" +
         '<div class="cert-photo"><img id="result-img" alt=""></div>' +
-        '<div class="cert-npc"><p class="alias">' + escapeHtml(result.npc ? result.npc.alias : "") + '</p><h3>' + escapeHtml(result.npc ? result.npc.name : "") + "</h3></div>" +
+        '<div class="cert-npc"><p class="alias">초기 인연</p><h3>' + escapeHtml(npc ? npc.name : result.bestNpcName) + "</h3></div>" +
         '<dl class="spec">' +
-          specRow("종족 성향", factionText) +
-          specRow("PULSE 등급", result.grade.roman + " · " + result.grade.name) +
-          specRow("초기 인연", result.npc ? result.npc.name : "") +
+          specRow("종족", result.species.name) +
+          specRow("생리", result.physiology) +
+          specRow("등급", result.pulseGrade + " · " + grade.roman + " " + grade.name) +
+          specRow("인연", npc ? npc.name : result.bestNpcName) +
         "</dl>" +
-        '<p class="trait">' + escapeHtml(result.trait) + "</p>" +
         '<p class="copy-preview">' + escapeHtml(line) + "</p>" +
         '<div class="cert-actions">' +
           '<button type="button" class="text-btn" id="copy-persona">크랙 페르소나용 한 줄 복사</button>' +
           '<button type="button" class="text-btn ghost" id="retry-quiz">다시 측정하기</button>' +
         "</div>" +
       "</article>";
-    assignImage(byId("result-img"), assets[imageKind] || assets.portrait, result.npc ? result.npc.name : "");
+    assignImage(byId("result-img"), assets.portrait, npc ? npc.name : result.bestNpcName);
     updateGaugeReadout();
+    scrollPulseTop();
     requestAnimationFrame(function () {
       var cert = byId("cert");
       if (cert) cert.classList.add("is-in");
@@ -3431,7 +3595,7 @@ var DATA = {
 
   function copyPersona() {
     if (!lastResult) return;
-    var line = resultLine(lastResult);
+    var line = lastResult.copyString;
     var done = function (ok) {
       if (ok) showToast("복사 완료. 크랙 페르소나에 붙여넣으세요.");
       else showToast("복사에 실패했습니다. 감정서의 문장을 길게 눌러 선택하세요.");
@@ -3451,11 +3615,12 @@ var DATA = {
   }
 
   function resetQuiz() {
+    clearTimeout(quizTimer);
+    quizTimer = 0;
     quiz = freshQuiz();
     quiz.started = true;
+    lastResult = null;
     renderQuestion();
-    var panel = pulse.querySelector(".pulse-panel");
-    if (panel) panel.scrollTop = 0;
   }
 
   function openPulse() {
