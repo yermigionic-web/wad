@@ -353,6 +353,7 @@
     position: relative;
     width: min(92%, 390px);
     margin: 0 auto;
+    cursor: pointer;
   }
   .reticle-svg {
     width: 100%;
@@ -540,6 +541,15 @@
     color: var(--ink);
   }
   .vn-text .ch { animation: ink 0.16s ease both; }
+  .vn-stress {
+    background-image:
+      linear-gradient(#D6D1C4, #D6D1C4),
+      linear-gradient(#D6D1C4, #D6D1C4),
+      linear-gradient(#8C764C, #8C764C);
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+    background-position: 0 calc(100% - 5px), 0 calc(100% - 3px), 0 100%;
+  }
   .vn-text.is-instant .ch { animation: none; }
   @keyframes ink {
     from { opacity: 0; filter: blur(1.6px); }
@@ -741,7 +751,14 @@
   .scale-pan {
     position: relative;
     z-index: 1;
-    pointer-events: none;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
     transform-origin: 50% 12%;
     transition: transform 0.46s cubic-bezier(.18, 1.25, .28, 1), opacity 0.35s ease;
   }
@@ -1556,7 +1573,37 @@
     color: var(--brass);
     padding-top: 3px;
   }
-  .choice.is-picked { border-color: var(--ink); background: #1a1e22; }
+  .choice.is-picked {
+    border-color: #E7F6F2;
+    background: #1c2a2c;
+    color: #F4F7F4;
+    animation: choiceBeat 0.28s ease-out;
+  }
+  @keyframes choiceBeat {
+    0% { transform: scale(1); filter: brightness(1); }
+    38% { transform: scale(1.035); filter: brightness(1.45) drop-shadow(0 0 10px rgba(186, 232, 220, 0.85)); }
+    100% { transform: scale(1); filter: brightness(1.12) drop-shadow(0 0 6px rgba(186, 232, 220, 0.45)); }
+  }
+  .gauge-dust {
+    fill: #E7D7A8;
+    opacity: 0;
+    transform-box: view-box;
+    transform-origin: 120px 118px;
+  }
+  #pulse-gauge.is-stir .gauge-dust { animation: dustBurst 0.48s ease-out; }
+  #pulse-gauge.is-stir #gauge-needle line {
+    stroke: #F6E7C2;
+    filter: drop-shadow(0 0 3px rgba(246, 231, 194, 0.9));
+  }
+  @keyframes dustBurst {
+    0% { opacity: 0; transform: rotate(-10deg) scale(0.9); }
+    22% { opacity: 0.95; }
+    100% { opacity: 0; transform: rotate(18deg) scale(1.06); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .choice.is-picked { animation: none; }
+    #pulse-gauge.is-stir .gauge-dust { animation: none; opacity: 0.7; }
+  }
 
   .cert {
     position: relative;
@@ -1849,7 +1896,7 @@
             <div class="lever-mech" id="lever-mech">
               <div class="lever-ruler" aria-hidden="true"></div>
               <div class="lever-stage">
-                <div class="scale-pan scale-wet" aria-hidden="true">
+                <button type="button" class="scale-pan scale-wet" aria-pressed="true" aria-label="WET으로 전환">
                   <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="wetMetal" x1="0" y1="0" x2="0" y2="1">
@@ -1910,12 +1957,12 @@
                       <text x="80" y="92.2" fill="none" stroke="#F4F7F8" stroke-width="0.3" opacity="0.4" textLength="52" lengthAdjust="spacing">WET</text>
                     </g>
                   </svg>
-                </div>
+                </button>
                 <button type="button" id="lever-btn" class="lever-btn" aria-pressed="false" aria-label="WET에서 DRY로 전환">
                   <span class="lever-arm"><span class="lever-knob"></span></span>
                   <span class="lever-pivot"></span>
                 </button>
-                <div class="scale-pan scale-dry" aria-hidden="true">
+                <button type="button" class="scale-pan scale-dry" aria-pressed="false" aria-label="DRY로 전환">
                   <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="dryMetal" x1="0" y1="0" x2="0.2" y2="1">
@@ -1976,7 +2023,7 @@
                       <text x="80" y="92.2" fill="none" stroke="#E4DDD2" stroke-width="0.28" opacity="0.25" textLength="52" lengthAdjust="spacing">DRY</text>
                     </g>
                   </svg>
-                </div>
+                </button>
               </div>
             </div>
             <p class="lever-note" id="lever-note"></p>
@@ -2047,6 +2094,16 @@
               <path d="M40 118 A80 80 0 0 1 120 40" fill="none" stroke="#1E4D54" stroke-width="1.2" opacity="0.85"/>
               <path d="M120 40 A80 80 0 0 1 200 118" fill="none" stroke="#B86F28" stroke-width="1.2" opacity="0.85"/>
               <g id="gauge-ticks"></g>
+              <g class="gauge-dust" aria-hidden="true">
+                <circle cx="120" cy="40" r="1.15"/>
+                <circle cx="96" cy="48" r="0.7"/>
+                <circle cx="146" cy="50" r="0.9"/>
+                <circle cx="74" cy="68" r="0.65"/>
+                <circle cx="168" cy="70" r="0.8"/>
+                <circle cx="86" cy="86" r="0.55"/>
+                <circle cx="156" cy="88" r="0.6"/>
+                <circle cx="120" cy="58" r="0.5"/>
+              </g>
               <circle id="pulse-ring" cx="120" cy="118" r="14" fill="none" stroke="#1E4D54" stroke-width="2" stroke-dasharray="88" stroke-dashoffset="50" transform="rotate(-90 120 118)" stroke-linecap="butt"/>
               <g id="gauge-needle">
                 <line x1="120" y1="118" x2="120" y2="36" stroke="#D6D1C4" stroke-width="1.25"/>
@@ -2194,12 +2251,12 @@ var DATA = {
     wet: {
       latin: "Humiditas",
       reading: "0.73",
-      note: "응결이 장부 위를 이긴다. 숨이 유리에 남는다."
+      note: "습기를 취해야 마나가 회복되는 타입의 PULSE"
     },
     dry: {
       latin: "Siccitas",
       reading: "0.81",
-      note: "수분이 철에서 달아난다. 재만 눈금을 남긴다."
+      note: "온기를 취해야 마나가 회복되는 타입의 PULSE"
     }
   },
   rosters: {
@@ -2210,32 +2267,32 @@ var DATA = {
     {
       speaker: "기록관",
       alt: "협곡 위 시계탑 성채",
-      text: "협곡의 바닥에 시계탑이 서 있다. 폭포는 끊기지 않고, 청록 등잔만이 밤의 가장자리를 센다. 이곳이 벨-아르카 분지다."
+      text: "이곳은 외계인도 수용한다는 다종족 제국, 벨-아르카. 지금 보고 계시는 곳은 칼데라 분지의 제일 밑바닥에 위치한 중심가 되시겠습니다."
     },
     {
       speaker: "기록관",
       alt: "젖은 골목과 가스등",
-      text: "등불이 젖은 돌 위에 길게 꺾인다. 골목은 황동의 냄새와 안개를 같이 머금는다. 발소리를 지우지 못한 자만이 장부에 남는다."
+      text: "황동의 냄새와 마정석의 불빛으로 가득한 골목은 온통 안개로 자욱하고, 그러나 외부 세계에서 넘어오신 당신에게 필수 안내 ― 이곳은 여성뿐이야! 그중에서도."
     },
     {
       speaker: "기록관",
       alt: "물과 불 사이의 압력계",
-      text: "물과 불은 같은 유리관 안에서 서로를 측정한다. 젖음은 기억을 남기고, 마름은 이름을 태운다. 분지의 주민은 그 사이 어디쯤으로 불린다."
+      text: "[[WET, 습식 종족과 DRY, 건식 종족으로 나뉘어 각자 다른 분파의 마나를 사용하는 부분]]* 이것만 알고 있다면, 당신도 벨-아르카 주민."
     },
     {
       speaker: "기록관",
       alt: "별을 가둔 고딕 성좌",
-      text: "높은 성좌는 별을 가두어 첨탑으로 삼았다. 제국은 그 빛으로 등급을 매긴다. 기도는 짧고, 조서는 길다."
+      text: "고위층들은 하늘 높은 줄 모르고 치솟은 첨탑에 살고, 짧게 살다 가는 단면종들은 얼굴로 밀어닥치는 스모그 속에 콜록이는 더러운 문화야 이곳에서도 매한가지지만…"
     },
     {
       speaker: "기록관",
       alt: "포자가 빛나는 숲의 폐허",
-      text: "가장자리의 숲은 포자로 숨 쉰다. 무너진 아치 아래, 물소리만은 아직 제국의 도장을 받지 않았다."
+      text: "도저히 질려서 참을 수 없어졌을 때는 자연인이라도 되어서 먹고살 수 있다는 것쯤은 장점이지. 도시가 피로할 때면, 벨-아르카의 숲속으로 도망쳐 버리자."
     },
     {
       speaker: "기록관",
       alt: "등잔 아래의 분지 지도",
-      text: "등잔 아래의 지도는 따뜻하고, 잉크는 차갑다. 당신은 열람자로서 여기에 도착했다. 장부를 펼치기 전에, 숨부터 고르라."
+      text: "그러니까, 이 대륙은 당신을 기다리고 있어. 얼른 등불을 들고 찾아와요!"
     }
   ],
   characters: {
@@ -3075,24 +3132,75 @@ var DATA = {
     if (!options || !options.deferType) startType(scene.text || "");
     else {
       clearTimeout(typer.timer);
-      typer.text = scene.text || "";
+      var marked = parseMarked(scene.text || "");
+      typer.text = marked.plain;
+      typer.ranges = marked.ranges;
       typer.i = 0;
       typer.done = false;
       typer.paused = true;
+      typer.stress = null;
       vnText.classList.remove("is-done");
       vnText.textContent = "";
     }
   }
 
+  function parseMarked(raw) {
+    var plain = "";
+    var ranges = [];
+    var i = 0;
+    var source = raw || "";
+    while (i < source.length) {
+      if (source.slice(i, i + 2) === "[[") {
+        var end = source.indexOf("]]", i + 2);
+        if (end < 0) {
+          plain += source.slice(i);
+          break;
+        }
+        var start = plain.length;
+        plain += source.slice(i + 2, end);
+        ranges.push([start, plain.length]);
+        i = end + 2;
+      } else {
+        plain += source.charAt(i);
+        i += 1;
+      }
+    }
+    return { plain: plain, ranges: ranges };
+  }
+
   function startType(text) {
     clearTimeout(typer.timer);
-    typer.text = text;
+    var marked = parseMarked(text);
+    typer.text = marked.plain;
+    typer.ranges = marked.ranges;
     typer.i = 0;
     typer.done = false;
     typer.paused = false;
+    typer.stress = null;
     vnText.classList.remove("is-done");
     vnText.textContent = "";
     typeStep();
+  }
+  function placeChar(ch, index) {
+    var span = document.createElement("span");
+    span.className = "ch";
+    span.textContent = ch;
+    var range = null;
+    (typer.ranges || []).forEach(function (item) {
+      if (index >= item[0] && index < item[1]) range = item;
+    });
+    if (range) {
+      if (!typer.stress || Number(typer.stress.getAttribute("data-end")) !== range[1]) {
+        typer.stress = document.createElement("span");
+        typer.stress.className = "vn-stress";
+        typer.stress.setAttribute("data-end", String(range[1]));
+        vnText.appendChild(typer.stress);
+      }
+      typer.stress.appendChild(span);
+    } else {
+      typer.stress = null;
+      vnText.appendChild(span);
+    }
   }
   function typeStep() {
     if (typer.paused) return;
@@ -3101,10 +3209,7 @@ var DATA = {
       vnText.classList.add("is-done");
       return;
     }
-    var span = document.createElement("span");
-    span.className = "ch";
-    span.textContent = typer.text.charAt(typer.i);
-    vnText.appendChild(span);
+    placeChar(typer.text.charAt(typer.i), typer.i);
     typer.i += 1;
     var ch = typer.text.charAt(typer.i - 1);
     var delay = 28;
@@ -3114,10 +3219,14 @@ var DATA = {
   }
   function finishType() {
     clearTimeout(typer.timer);
-    typer.i = typer.text.length;
     typer.done = true;
     typer.paused = false;
-    vnText.textContent = typer.text;
+    vnText.classList.remove("is-done");
+    vnText.textContent = "";
+    typer.stress = null;
+    var i;
+    for (i = 0; i < typer.text.length; i += 1) placeChar(typer.text.charAt(i), i);
+    typer.i = typer.text.length;
     vnText.classList.add("is-done");
   }
   function pauseTyping() {
@@ -3175,8 +3284,13 @@ var DATA = {
   }
 
   function applyClimate(next, animate) {
+    if (animate && stage.getAttribute("data-climate") === next) return;
     var meta = DATA.climate[next] || DATA.climate.wet;
     stage.setAttribute("data-climate", next);
+    var wetPan = document.querySelector(".scale-wet");
+    var dryPan = document.querySelector(".scale-dry");
+    if (wetPan) wetPan.setAttribute("aria-pressed", next === "wet" ? "true" : "false");
+    if (dryPan) dryPan.setAttribute("aria-pressed", next === "dry" ? "true" : "false");
     climateRead.textContent = meta.latin + "  ·  " + meta.reading;
     leverNote.textContent = meta.note || "";
     var dry = next === "dry";
@@ -3270,7 +3384,7 @@ var DATA = {
               '<div class="spec-job"><dt>직업</dt><dd class="em-job">' + escapeHtml(c.job || "—") + "</dd></div>" +
               '<div class="spec-measure"><dt>키 · 나이</dt><dd class="em-measure">' + escapeHtml(c.measure || "—") + aspect + "</dd></div>" +
             "</dl>" +
-            '<div class="bio"><span class="caps bio-kicker">소개</span>' + bioHtml(intro, "official") + "</div>" +
+            '<div class="bio"><span class="caps bio-kicker">소개</span>' + bioHtml(intro.slice(0, 1), "official") + "</div>" +
           "</div>" +
           '<div class="face face-rumor"><p class="caps rumor-kicker">Unofficial · 유통 금지</p><div class="bio">' + bioHtml(rumorParas, "rumor") + "</div></div>" +
         "</div>" +
@@ -3461,7 +3575,13 @@ var DATA = {
       var live = quiz.finished && lastResult ? lastResult : scoreAnswers(quiz.answers);
       var balance = -(live.axes.WD / 5);
       var tremor = reduceMotion ? 0 : (live.pulseGrade / 9) * 1.7 * Math.sin(t / 78);
-      var angle = balance * 72 + tremor;
+      var kick = 0;
+      if (!reduceMotion && quiz.kickUntil) {
+        var left = quiz.kickUntil - t;
+        if (left > 0) kick = Math.sin((1 - left / 460) * Math.PI) * 22 * (quiz.kickSign || 1);
+        else quiz.kickUntil = 0;
+      }
+      var angle = balance * 72 + tremor + kick;
       gaugeNeedle.setAttribute("transform", "rotate(" + angle.toFixed(2) + " 120 118)");
       gaugeRaf = requestAnimationFrame(frame);
     }
@@ -3520,6 +3640,14 @@ var DATA = {
     var button = pulseBody.querySelector('[data-choice="' + index + '"]');
     if (button) button.classList.add("is-picked");
     pulseBody.querySelectorAll(".choice").forEach(function (el) { el.disabled = true; });
+    var gauge = byId("pulse-gauge");
+    if (gauge) {
+      gauge.classList.remove("is-stir");
+      void gauge.offsetWidth;
+      gauge.classList.add("is-stir");
+    }
+    quiz.kickSign = choice.axis === "WD" ? (choice.val > 0 ? -1 : 1) : (quiz.answers.length % 2 ? 1 : -1);
+    quiz.kickUntil = reduceMotion ? 0 : performance.now() + 460;
     updateGaugeReadout();
     var wait = (DATA.quizMeta && DATA.quizMeta.advanceMs) || 250;
     clearTimeout(quizTimer);
@@ -3648,6 +3776,7 @@ var DATA = {
     audio.addEventListener("play", syncAudioIcon);
     audio.addEventListener("pause", syncAudioIcon);
     byId("enter-btn").addEventListener("click", enterBasin);
+    document.querySelector(".hero-mark").addEventListener("click", enterBasin);
     byId("skip-btn").addEventListener("click", function (event) {
       event.stopPropagation();
       openSkip();
@@ -3665,6 +3794,8 @@ var DATA = {
       var next = stage.getAttribute("data-climate") === "dry" ? "wet" : "dry";
       applyClimate(next, true);
     });
+    document.querySelector(".scale-wet").addEventListener("click", function () { applyClimate("wet", true); });
+    document.querySelector(".scale-dry").addEventListener("click", function () { applyClimate("dry", true); });
     byId("tab-dossier").addEventListener("click", function () { setTab("dossier"); });
     byId("tab-archive").addEventListener("click", function () { setTab("archive"); });
     dossierList.addEventListener("click", function (event) {
