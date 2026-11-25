@@ -1,0 +1,3192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0C0E">
+<meta name="color-scheme" content="dark">
+<title>WET &amp; DRY — 벨-아르카 분지 기록</title>
+<!--
+  단일 파일 문서.
+  [SECTION 1: CSS]
+  [SECTION 2: HTML]
+  [SECTION 3: ASSET & DATA CONFIG]
+  [SECTION 4: JS LOGIC]
+  경로·대사·프로필·문항은 SECTION 3만 고치면 화면에 반영된다.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Gowun+Batang:wght@400;700&family=IM+Fell+English:ital@0;1&family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     [SECTION 1: CSS]
+     ============================================================ -->
+<style>
+  :root {
+    --obsidian: #0A0C0E;
+    --slate: #131619;
+    --iron: #1E2226;
+    --ink: #D6D1C4;
+    --ink-dim: rgba(214, 209, 196, 0.62);
+    --ink-faint: rgba(214, 209, 196, 0.38);
+    --brass: #8C764C;
+    --brass-line: rgba(140, 118, 76, 0.55);
+    --verdi: #3C5E5A;
+    --wet: #1E4D54;
+    --wet-hot: #7A1C24;
+    --dry: #8F4329;
+    --dry-hot: #B86F28;
+    --climate: var(--wet);
+    --climate-hot: var(--wet-hot);
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --chamfer: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    --chamfer-sm: polygon(7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px);
+    --serif: "Gowun Batang", "Noto Serif KR", "Batang", serif;
+    --display-ko: "Noto Serif KR", "Gowun Batang", serif;
+    --caps: "Cinzel", "Times New Roman", serif;
+    --alias: "Cormorant Garamond", Palatino, "Palatino Linotype", serif;
+    --latin: "IM Fell English", Palatino, "Palatino Linotype", serif;
+  }
+
+  #stage[data-climate="dry"] {
+    --climate: var(--dry);
+    --climate-hot: var(--dry-hot);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #050607;
+    color: var(--ink);
+    overflow: hidden;
+  }
+  body {
+    font-family: var(--serif);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  img { display: block; max-width: 100%; -webkit-user-drag: none; }
+  img.is-broken { visibility: hidden; }
+  p { margin: 0; }
+  h1, h2, h3 { font-family: var(--display-ko); font-weight: 500; margin: 0; }
+  ::selection { background: #3C5E5A; color: var(--ink); }
+  :focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; }
+
+  .caps {
+    font-family: var(--caps);
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .latin { font-family: var(--latin); letter-spacing: 0.02em; }
+  .alias { font-family: var(--alias); font-style: italic; font-weight: 500; }
+
+  .prose, .vn-text, .acc-inner, .face, .quote, .copy-preview, .q-prompt, .choice, .bubble {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  /* stage */
+  #void {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    overflow: clip;
+    background: #050607;
+  }
+  #stage {
+    position: relative;
+    width: min(100%, 430px);
+    height: 100%;
+    overflow: hidden;
+    overflow: clip;
+    background: var(--obsidian);
+    color: var(--ink);
+    box-shadow: 0 0 0 1px rgba(140, 118, 76, 0.22);
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .screen.is-on {
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  /* grain — topmost, clicks pass through */
+  .grain {
+    position: absolute;
+    left: -8%;
+    top: -8%;
+    width: 116%;
+    height: 116%;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .grain-fine {
+    mix-blend-mode: overlay;
+    opacity: 0.42;
+    animation: grainShift 0.55s steps(2) infinite;
+  }
+  .grain-paper {
+    mix-blend-mode: soft-light;
+    opacity: 0.34;
+  }
+  @keyframes grainShift {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-1.4%, 0.5%); }
+    50% { transform: translate(0.8%, -1.1%); }
+    75% { transform: translate(-0.6%, 0.9%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  /* audio + skip, always in the stage corner */
+  .audio-btn {
+    position: absolute;
+    top: calc(8px + var(--safe-t));
+    right: 6px;
+    z-index: 80;
+    width: 44px;
+    height: 44px;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+  }
+  .audio-btn svg { width: 22px; height: 22px; }
+  .audio-btn.is-off .wave { display: none; }
+  .audio-btn:not(.is-off) .slash { display: none; }
+
+  .skip-btn {
+    position: absolute;
+    top: calc(8px + var(--safe-t));
+    right: 50px;
+    z-index: 50;
+    height: 44px;
+    padding: 0 6px;
+    font-family: var(--caps);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--ink);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #stage[data-screen="vn"] .skip-btn { opacity: 1; pointer-events: auto; }
+  .skip-btn span {
+    border-bottom: 1px solid var(--brass-line);
+    padding-bottom: 2px;
+  }
+
+  /* iris shutter */
+  .iris {
+    --r: 1400px;
+    --spin: 0deg;
+    position: absolute;
+    inset: 0;
+    z-index: 74;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 50%, transparent var(--r), #050607 calc(var(--r) + 1.5px));
+  }
+  .iris.is-active { opacity: 1; pointer-events: auto; }
+  .iris-ring {
+    position: absolute;
+    inset: 0;
+    background: repeating-conic-gradient(from var(--spin), rgba(140, 118, 76, 0.95) 0deg 1.5deg, transparent 1.5deg 20deg);
+    -webkit-mask: radial-gradient(circle at 50% 50%, transparent calc(var(--r) - 15px), #000 calc(var(--r) - 11px), #000 calc(var(--r) + 0.5px), transparent calc(var(--r) + 2px));
+    mask: radial-gradient(circle at 50% 50%, transparent calc(var(--r) - 15px), #000 calc(var(--r) - 11px), #000 calc(var(--r) + 0.5px), transparent calc(var(--r) + 2px));
+  }
+
+  .veil {
+    position: absolute;
+    inset: 0;
+    z-index: 71;
+    background: #050607;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .veil.is-on { opacity: 1; }
+
+  .logo-fx {
+    position: absolute;
+    inset: 0;
+    z-index: 73;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .logo-fx img { width: min(70%, 280px); height: auto; }
+  .logo-fx.is-on { animation: logoFlash 0.95s ease forwards; }
+  @keyframes logoFlash {
+    0% { opacity: 0; }
+    18% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .logo-fx.is-on img { animation: logoGlow 0.95s ease forwards; }
+  @keyframes logoGlow {
+    0% { filter: blur(10px) brightness(2.2); transform: scale(0.92); opacity: 0; }
+    32% { filter: blur(0) brightness(1.65); transform: scale(1); opacity: 1; }
+    100% { filter: blur(1px) brightness(1); transform: scale(1.04); opacity: 0; }
+  }
+
+  /* ---------- landing ---------- */
+  #screen-landing { background: var(--obsidian); }
+  .land-bg { position: absolute; inset: 0; overflow: hidden; }
+  .land-bg img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(1.6px) brightness(0.4) saturate(0.72);
+    transform: scale(1.06);
+  }
+  .land-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(5, 6, 7, 0.55), transparent 22%, transparent 48%, rgba(5, 6, 7, 0.88) 100%),
+      radial-gradient(ellipse at center, transparent 28%, rgba(5, 6, 7, 0.78) 100%);
+  }
+  .fog { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .fog i {
+    position: absolute;
+    width: 46%;
+    height: 22%;
+    background: radial-gradient(ellipse, rgba(214, 209, 196, 0.16), transparent 70%);
+    filter: blur(10px);
+    animation: fogDrift 26s linear infinite;
+    opacity: 0.35;
+  }
+  .fog i:nth-child(1) { left: -20%; top: 18%; }
+  .fog i:nth-child(2) { left: 30%; top: 40%; animation-duration: 34s; animation-delay: -8s; width: 55%; }
+  .fog i:nth-child(3) { left: -10%; top: 62%; animation-duration: 30s; animation-delay: -14s; }
+  .fog i:nth-child(4) { left: 40%; top: 8%; animation-duration: 22s; animation-delay: -4s; width: 30%; height: 14%; }
+  .fog i:nth-child(5) { left: 10%; top: 78%; width: 8px; height: 8px; border-radius: 50%; filter: blur(0); background: rgba(214, 209, 196, 0.45); animation-duration: 18s; }
+  .fog i:nth-child(6) { left: 70%; top: 30%; width: 3px; height: 3px; border-radius: 50%; filter: blur(0); background: rgba(214, 209, 196, 0.4); animation-duration: 16s; animation-delay: -6s; }
+  .fog i:nth-child(7) { left: 22%; top: 48%; width: 2px; height: 2px; border-radius: 50%; filter: blur(0); background: rgba(140, 118, 76, 0.7); animation-duration: 20s; animation-delay: -11s; }
+  .fog i:nth-child(8) { left: 80%; top: 70%; width: 4px; height: 4px; border-radius: 50%; filter: blur(0); background: rgba(214, 209, 196, 0.35); animation-duration: 24s; animation-delay: -3s; }
+  @keyframes fogDrift {
+    0% { transform: translate3d(-6%, 0, 0); opacity: 0.15; }
+    50% { opacity: 0.5; }
+    100% { transform: translate3d(18%, -8%, 0); opacity: 0.12; }
+  }
+
+  .crop {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    z-index: 3;
+    pointer-events: none;
+    border: 0 solid rgba(140, 118, 76, 0.75);
+  }
+  .crop.tl { top: calc(10px + var(--safe-t)); left: 10px; border-top-width: 1px; border-left-width: 1px; }
+  .crop.tr { top: calc(10px + var(--safe-t)); right: 10px; border-top-width: 1px; border-right-width: 1px; }
+  .crop.bl { bottom: calc(10px + var(--safe-b)); left: 10px; border-bottom-width: 1px; border-left-width: 1px; }
+  .crop.br { bottom: calc(10px + var(--safe-b)); right: 10px; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .reg {
+    position: absolute;
+    z-index: 3;
+    top: calc(18px + var(--safe-t));
+    left: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--caps);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+  }
+  .spine {
+    position: absolute;
+    z-index: 3;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    font-family: var(--caps);
+    font-size: 9px;
+    letter-spacing: 0.32em;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .land-center {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    top: 46%;
+    transform: translateY(-52%);
+  }
+  .hero-mark {
+    position: relative;
+    width: min(92%, 390px);
+    margin: 0 auto;
+  }
+  .reticle-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    animation: spin 96s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .logo-slot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 66%;
+    transform: translate(-50%, -52%);
+  }
+  .logo-slot img { width: 100%; height: auto; filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.55)); }
+  .flourish {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    color: var(--brass);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+  .flourish.tl { top: 0; left: 0; }
+  .flourish.tr { top: 0; right: 0; transform: scaleX(-1); }
+  .flourish.br { bottom: 0; right: 0; transform: scale(-1); }
+  .flourish.bl { bottom: 0; left: 0; transform: scaleY(-1); }
+
+  .enter-wrap {
+    position: absolute;
+    z-index: 4;
+    left: 16px;
+    right: 16px;
+    bottom: calc(22px + var(--safe-b));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .land-file {
+    font-family: var(--latin);
+    font-size: 14px;
+    color: var(--ink-dim);
+    pointer-events: none;
+  }
+  .enter {
+    width: 100%;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: var(--ink);
+  }
+  .enter-plus {
+    color: var(--brass);
+    font-family: var(--caps);
+    font-size: 13px;
+    line-height: 1;
+    animation: breath 3.6s ease-in-out infinite;
+  }
+  .enter-label {
+    font-family: var(--caps);
+    font-size: clamp(9px, 2.55vw, 12px);
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+  }
+  .enter-rule {
+    display: block;
+    height: 1px;
+    background: var(--brass);
+    transform-origin: center;
+    animation: breath 3.6s ease-in-out infinite;
+  }
+  .enter-rule.a { width: 46%; }
+  .enter-rule.b { width: 28%; animation-delay: 0.45s; opacity: 0.7; }
+  @keyframes breath {
+    0%, 100% { opacity: 0.32; transform: scaleX(0.82); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+  .enter-plus { animation-name: breathFade; }
+  @keyframes breathFade {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+
+  /* ---------- visual novel ---------- */
+  #screen-vn { background: #050607; }
+  .vn-bg { position: absolute; inset: 0; overflow: hidden; }
+  .vn-layer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .vn-layer.is-front { opacity: 1; z-index: 1; }
+  .vn-layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+    filter: brightness(0.78) saturate(0.86);
+    transform: scale(1.03);
+  }
+  .vn-layer.is-front img { animation: ken 18s ease-out forwards; }
+  @keyframes ken {
+    from { transform: scale(1.02); }
+    to { transform: scale(1.1); }
+  }
+  .vn-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(5, 6, 7, 0.55), transparent 16%),
+      radial-gradient(ellipse at center, transparent 45%, rgba(5, 6, 7, 0.38) 100%);
+  }
+  .vn-progress {
+    position: absolute;
+    z-index: 5;
+    top: calc(16px + var(--safe-t));
+    left: 16px;
+    right: 118px;
+  }
+  .vn-ruler {
+    position: relative;
+    height: 9px;
+    background: repeating-linear-gradient(90deg, rgba(140, 118, 76, 0.85) 0 1px, transparent 1px 6px);
+  }
+  .vn-ruler-fill {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    height: 1px;
+    width: 0;
+    background: var(--ink);
+    transition: width 0.45s ease;
+  }
+  .vn-count {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--caps);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink);
+  }
+  .vn-dialog {
+    position: absolute;
+    z-index: 4;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 46%;
+    padding: 22% 22px calc(26px + var(--safe-b));
+    background: linear-gradient(to bottom, rgba(10, 12, 14, 0) 0%, rgba(10, 12, 14, 0.55) 24%, rgba(10, 12, 14, 0.94) 52%, #0A0C0E 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .vn-speaker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-family: var(--caps);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--brass);
+  }
+  .vn-speaker::after {
+    content: "";
+    width: 42px;
+    height: 1px;
+    background: var(--brass);
+  }
+  .vn-speaker:empty { display: none; }
+  .vn-text {
+    min-height: 6.6em;
+    font-size: 16.5px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+  .vn-text .ch { animation: ink 0.16s ease both; }
+  .vn-text.is-instant .ch { animation: none; }
+  @keyframes ink {
+    from { opacity: 0; filter: blur(1.6px); }
+    to { opacity: 1; filter: blur(0); }
+  }
+  .vn-text.is-done::after {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 1px;
+    margin-left: 8px;
+    background: var(--brass);
+    vertical-align: middle;
+    animation: breathFade 1.3s ease-in-out infinite;
+  }
+  .vn-hint {
+    margin-top: 12px;
+    font-family: var(--caps);
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    color: var(--brass);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .vn-text.is-done ~ .vn-hint { opacity: 0.85; }
+
+  /* ---------- hub ---------- */
+  #screen-hub { background: var(--obsidian); }
+  .hub-atmos, .climate-vig {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hub-atmos { z-index: 0; overflow: hidden; }
+  .hub-scroll {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(214, 209, 196, 0.03) 28px);
+  }
+  .hub-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .climate-vig { z-index: 4; transition: background 0.35s ease, box-shadow 0.35s ease; }
+  #stage[data-climate="wet"] .climate-vig {
+    background: radial-gradient(ellipse at center, transparent 46%, rgba(30, 77, 84, 0.28) 82%, rgba(6, 10, 12, 0.72) 100%);
+    box-shadow: inset 0 0 48px rgba(122, 28, 36, 0.12);
+  }
+  #stage[data-climate="dry"] .climate-vig {
+    background: radial-gradient(ellipse at center, transparent 48%, rgba(143, 67, 41, 0.26) 82%, rgba(12, 7, 5, 0.72) 100%);
+    box-shadow: inset 0 0 42px rgba(184, 111, 40, 0.12);
+  }
+
+  .mote {
+    position: absolute;
+    bottom: -12px;
+    opacity: 0;
+    animation-name: rise;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+  .mote.mist {
+    background: rgba(176, 214, 210, 0.55);
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+  .mote.mist.wide {
+    background: radial-gradient(ellipse, rgba(30, 77, 84, 0.45), transparent 70%);
+    filter: blur(8px);
+    border-radius: 50%;
+  }
+  .mote.ash { background: #B86F28; box-shadow: 0 0 5px rgba(184, 111, 40, 0.8); }
+  #stage[data-climate="wet"] .mote.ash { display: none; }
+  #stage[data-climate="dry"] .mote.mist { display: none; }
+  @keyframes rise {
+    0% { transform: translate3d(0, 8px, 0); opacity: 0; }
+    14% { opacity: 0.8; }
+    100% { transform: translate3d(var(--dx, 12px), -105dvh, 0); opacity: 0; }
+  }
+
+  .hub-header {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: 74px 1fr 46px;
+    align-items: end;
+    gap: 4px;
+    min-height: calc(54px + var(--safe-t));
+    padding: calc(8px + var(--safe-t)) 4px 0 12px;
+    background: #0A0C0E;
+    border-bottom: 1px solid rgba(140, 118, 76, 0.35);
+  }
+  .brand { padding-bottom: 8px; line-height: 1; }
+  .brand-w, .brand-d {
+    font-family: var(--caps);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+  .brand-amp {
+    font-family: var(--latin);
+    font-style: italic;
+    color: var(--brass);
+    margin: 0 1px;
+    font-size: 13px;
+  }
+  .brand small {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--caps);
+    font-size: 7px;
+    letter-spacing: 0.18em;
+    color: var(--brass);
+  }
+  .tabs {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-self: stretch;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1px;
+    padding: 6px 2px 9px;
+    color: var(--ink-faint);
+  }
+  .tab b {
+    font-family: var(--display-ko);
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+  .tab small {
+    font-family: var(--caps);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--ink);
+    background: #121518;
+  }
+  .tab-bar {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 50%;
+    height: 2px;
+    background: var(--brass);
+    transform: translateX(0);
+    transition: transform 0.35s cubic-bezier(.2, .8, .2, 1);
+  }
+  .tabs[data-tab="archive"] .tab-bar { transform: translateX(100%); }
+  .view { display: none; padding-bottom: calc(28px + var(--safe-b)); }
+  .view.is-on { display: block; }
+
+  /* lever */
+  .lever-block { padding: 16px 16px 6px; }
+  .lever-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .lever-meta .caps { color: var(--brass); font-size: 9px; }
+  .lever-meta .latin { font-size: 15px; color: var(--ink); }
+  .lever-mech {
+    position: relative;
+    border-top: 1px solid var(--brass-line);
+    border-bottom: 1px solid rgba(140, 118, 76, 0.25);
+    padding-top: 8px;
+  }
+  .lever-mech.is-clack { animation: clack 0.28s ease; }
+  @keyframes clack {
+    0% { transform: translateY(0); }
+    40% { transform: translateY(1px); }
+    100% { transform: translateY(0); }
+  }
+  .lever-ruler {
+    height: 10px;
+    margin: 0 8px;
+    background: repeating-linear-gradient(90deg, var(--brass) 0 1px, transparent 1px 9px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .lever-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px 0;
+    font-family: var(--caps);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+  }
+  .lab-wet { color: var(--wet); }
+  .lab-dry { color: var(--dry-hot); }
+  #stage[data-climate="wet"] .lab-dry { opacity: 0.35; }
+  #stage[data-climate="dry"] .lab-wet { opacity: 0.35; }
+  .lever-btn {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 112px;
+  }
+  .lever-pivot {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border: 1px solid var(--brass);
+    border-radius: 50%;
+    background: var(--obsidian);
+    z-index: 2;
+  }
+  .lever-arm {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    width: 4px;
+    height: 76px;
+    margin-left: -2px;
+    background: #8C764C;
+    transform-origin: 50% 100%;
+    z-index: 1;
+    transition: transform 0.46s cubic-bezier(.18, 1.25, .28, 1);
+  }
+  #stage[data-climate="wet"] .lever-arm { transform: rotate(-36deg); }
+  #stage[data-climate="dry"] .lever-arm { transform: rotate(36deg); }
+  .lever-knob {
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    width: 30px;
+    height: 16px;
+    transform: translateX(-50%);
+    background: var(--iron);
+    border: 1px solid var(--brass);
+    clip-path: polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px);
+  }
+  .lever-knob::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 5px;
+    height: 1px;
+    background: var(--brass);
+  }
+  .lever-note {
+    margin: 8px 2px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-dim);
+  }
+
+  /* dossier cards */
+  .dossier-list { padding: 8px 0 0; }
+  .card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 10px;
+    width: calc(100% - 28px);
+    margin: 0 14px 10px;
+    padding: 8px 12px 8px 8px;
+    text-align: left;
+    background: #101316;
+    border: 1px solid var(--brass-line);
+    clip-path: var(--chamfer);
+    animation: riseIn 0.42s ease both;
+  }
+  .card:nth-child(2) { animation-delay: 40ms; }
+  .card:nth-child(3) { animation-delay: 80ms; }
+  .card:nth-child(4) { animation-delay: 120ms; }
+  .card:nth-child(5) { animation-delay: 160ms; }
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: var(--climate);
+  }
+  .portrait-slot {
+    position: relative;
+    width: 96px;
+    height: 128px;
+  }
+  .portrait-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(1) contrast(1.08) brightness(0.9);
+    transition: filter 0.45s ease;
+  }
+  .card:hover img,
+  .card:active img,
+  .card:focus-visible img,
+  .card.is-awake img {
+    filter: none;
+  }
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 4px 0;
+  }
+  .card-no { color: var(--brass); font-size: 9px; }
+  .card-name {
+    margin-top: 4px;
+    font-size: 20px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+  .card-alias {
+    margin: 1px 0 8px;
+    font-size: 16px;
+    color: var(--ink-dim);
+    line-height: 1.2;
+  }
+  .card-pulse, .spec-pulse {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .card-pulse .caps, .spec-grade { color: var(--ink-dim); font-size: 9px; letter-spacing: 0.14em; }
+  .ticks { display: flex; align-items: flex-end; gap: 3px; height: 14px; }
+  .ticks i {
+    display: block;
+    width: 2px;
+    height: 7px;
+    background: rgba(140, 118, 76, 0.35);
+  }
+  .ticks i.is-major { height: 12px; }
+  .ticks i.is-on { background: var(--climate); }
+
+  .persona-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: calc(100% - 28px);
+    margin: 12px 14px 88px;
+    padding: 14px 14px 13px;
+    text-align: left;
+    border: 1px solid var(--brass-line);
+    background:
+      linear-gradient(var(--climate), var(--climate)) left / 1px 100% no-repeat,
+      #101316;
+    clip-path: var(--chamfer);
+  }
+  .persona-banner .caps { color: var(--brass); }
+  .persona-label {
+    font-family: var(--display-ko);
+    font-size: 16px;
+  }
+  .persona-label em {
+    font-style: normal;
+    color: var(--brass);
+    margin-left: 6px;
+  }
+
+  /* sheet */
+  .sheet {
+    position: absolute;
+    inset: 0;
+    z-index: 24;
+    display: flex;
+    flex-direction: column;
+    background: var(--obsidian);
+    transform: translateY(104%);
+    transition: transform 0.52s cubic-bezier(.22, .8, .28, 1);
+    pointer-events: none;
+  }
+  .sheet.is-open { transform: none; pointer-events: auto; }
+  .sheet-bar {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(46px + var(--safe-t));
+    padding: calc(8px + var(--safe-t)) 52px 8px;
+    background: #0A0C0E;
+    border-bottom: 1px solid rgba(140, 118, 76, 0.35);
+    font-family: var(--caps);
+    letter-spacing: 0.18em;
+    font-size: 10px;
+    color: var(--brass);
+  }
+  .sheet-close {
+    position: absolute;
+    left: 4px;
+    top: calc(6px + var(--safe-t));
+    width: 44px;
+    height: 36px;
+    font-family: var(--caps);
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .sheet-body {
+    flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .editorial {
+    position: relative;
+    height: 58dvh;
+    min-height: 320px;
+  }
+  .editorial::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, #0A0C0E);
+  }
+  .standing-slot {
+    position: absolute;
+    right: 0;
+    bottom: -5%;
+    width: 74%;
+    height: 112%;
+    z-index: 1;
+  }
+  .standing-slot img,
+  .standing-slot .ph {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: right bottom;
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 18%, #000 90%, transparent 100%);
+    mask-image: linear-gradient(to top, transparent 0%, #000 18%, #000 90%, transparent 100%);
+  }
+  .ed-caption {
+    position: absolute;
+    z-index: 2;
+    left: 16px;
+    top: 14px;
+    max-width: 58%;
+    text-shadow: 0 2px 14px #000, 0 0 2px #000;
+    pointer-events: none;
+  }
+  .ed-caption .caps { color: var(--brass); }
+  .ed-name { margin-top: 6px; font-size: 26px; line-height: 1.25; }
+  .ed-alias { margin-top: 2px; font-size: 18px; color: rgba(214, 209, 196, 0.86); }
+  .stamp {
+    position: absolute;
+    z-index: 3;
+    left: 12px;
+    bottom: 16px;
+    width: 108px;
+    transform: rotate(-8deg);
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.55));
+  }
+  .stamp.is-boing { animation: boing 0.48s ease; }
+  @keyframes boing {
+    0% { transform: rotate(-8deg) scale(1); }
+    35% { transform: rotate(-1deg) scale(1.07); }
+    68% { transform: rotate(-11deg) scale(0.98); }
+    100% { transform: rotate(-8deg) scale(1); }
+  }
+  .stamp-photo {
+    position: relative;
+    display: block;
+    height: 136px;
+    background: #141210;
+    border: 1px dashed rgba(140, 118, 76, 0.8);
+    clip-path: var(--chamfer-sm);
+  }
+  .stamp-photo img { width: 100%; height: 100%; object-fit: contain; }
+  .bubble {
+    position: absolute;
+    left: calc(100% - 6px);
+    bottom: 62%;
+    width: 148px;
+    padding: 8px 9px;
+    background: #121418;
+    border: 1px solid var(--brass-line);
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: left;
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    clip-path: var(--chamfer-sm);
+  }
+  .bubble.is-on { opacity: 1; transform: none; transition: 0.22s ease; }
+
+  .identity { position: relative; z-index: 2; padding: 4px 16px calc(108px + var(--safe-b)); }
+  .face-switch {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid rgba(140, 118, 76, 0.28);
+  }
+  .face-switch button {
+    padding: 12px 4px 11px;
+    font-family: var(--display-ko);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .face-switch button[aria-pressed="true"] { color: var(--ink); }
+  .face-bar {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 50%;
+    height: 1px;
+    background: var(--brass);
+    transition: transform 0.3s ease;
+  }
+  .face-switch[data-show="rumor"] .face-bar { transform: translateX(100%); }
+  .faces[data-show="official"] .face-rumor,
+  .faces[data-show="rumor"] .face-official { display: none; }
+  .face { padding-top: 14px; animation: ink 0.35s ease; }
+  .spec { margin: 0; }
+  .spec > div {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 8px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(140, 118, 76, 0.22);
+    align-items: center;
+  }
+  .spec dt {
+    font-family: var(--caps);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--brass);
+  }
+  .spec dd { margin: 0; font-size: 15px; line-height: 1.45; }
+  .quote {
+    margin: 16px 0 0;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .quote::before {
+    content: "\201C";
+    font-family: var(--latin);
+    color: var(--brass);
+    font-size: 28px;
+    line-height: 0;
+    margin-right: 4px;
+    vertical-align: -6px;
+  }
+  .rumor-kicker { color: var(--wet-hot); margin-bottom: 8px; }
+  .face-rumor p { font-size: 15px; line-height: 1.75; color: rgba(214, 209, 196, 0.88); margin-top: 10px; }
+
+  /* archive */
+  .arch-banner {
+    position: relative;
+    margin: 0;
+    height: 210px;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(140, 118, 76, 0.35);
+  }
+  .arch-photo { position: absolute; inset: 0; }
+  .arch-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.48) saturate(0.8);
+  }
+  .arch-banner figcaption {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    z-index: 1;
+  }
+  .arch-banner .caps { color: var(--brass); }
+  .arch-banner strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--display-ko);
+    font-size: 26px;
+    font-weight: 500;
+  }
+  .arch-banner .latin { display: block; margin-top: 2px; color: var(--ink-dim); font-size: 14px; }
+  .arch-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(10, 12, 14, 0.15), rgba(10, 12, 14, 0.2) 40%, #0A0C0E);
+    pointer-events: none;
+  }
+  .arch-lead {
+    padding: 14px 16px 4px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-dim);
+  }
+  .acc { border-top: 1px solid rgba(140, 118, 76, 0.28); }
+  .acc:last-child { border-bottom: 1px solid rgba(140, 118, 76, 0.28); margin-bottom: 88px; }
+  .acc-head {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 36px 1fr 16px;
+    gap: 8px;
+    align-items: center;
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .acc-no {
+    font-family: var(--caps);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--brass);
+  }
+  .acc-head b {
+    display: block;
+    font-family: var(--display-ko);
+    font-weight: 500;
+    font-size: 16px;
+  }
+  .acc-head small {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--caps);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+  }
+  .acc-mark { width: 11px; height: 11px; position: relative; }
+  .acc-mark::before, .acc-mark::after {
+    content: "";
+    position: absolute;
+    background: var(--brass);
+  }
+  .acc-mark::before { left: 0; right: 0; top: 5px; height: 1px; }
+  .acc-mark::after { top: 0; bottom: 0; left: 5px; width: 1px; }
+  .acc.is-open .acc-mark { transform: rotate(45deg); }
+  .acc-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.42s ease;
+  }
+  .acc.is-open .acc-body { grid-template-rows: 1fr; }
+  .acc-inner { overflow: hidden; }
+  .acc-inner p, .acc-inner .grade-list, .acc-inner .lex {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .acc-inner p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(214, 209, 196, 0.9);
+    margin: 0 0 12px;
+  }
+  .acc-inner p:first-child { margin-top: 2px; }
+  .grade-list { list-style: none; margin: 0 0 14px; padding: 0 16px; }
+  .grade-list li {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-top: 1px solid rgba(140, 118, 76, 0.22);
+    font-size: 14px;
+  }
+  .grade-list span:first-child { font-family: var(--caps); color: var(--brass); font-size: 12px; }
+  .grade-list em { font-family: var(--alias); font-size: 14px; color: var(--ink-dim); }
+  .lex { margin: 0 0 16px; }
+  .lex dt {
+    font-family: var(--display-ko);
+    font-size: 15px;
+    margin-top: 12px;
+  }
+  .lex dd {
+    margin: 3px 0 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(214, 209, 196, 0.82);
+  }
+
+  /* fab */
+  .fab {
+    position: absolute;
+    z-index: 30;
+    right: 12px;
+    bottom: calc(14px + var(--safe-b));
+    width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--ink);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  #stage[data-screen="hub"] .fab { opacity: 1; pointer-events: auto; transform: none; }
+  #stage[data-pulse="open"] .fab,
+  #stage[data-sheet="open"] .fab { opacity: 0; pointer-events: none; }
+  .fab-svg { width: 58px; height: 58px; overflow: visible; }
+  .fab-needle { transform-origin: 32px 32px; transform-box: view-box; animation: sway 2.6s ease-in-out infinite alternate; }
+  @keyframes sway {
+    from { transform: rotate(-16deg); }
+    to { transform: rotate(12deg); }
+  }
+  .fab-label {
+    font-family: var(--caps);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    color: var(--ink-dim);
+  }
+
+  /* pulse overlay */
+  .pulse {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+  }
+  .pulse.is-open { pointer-events: auto; }
+  .pulse-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 6, 7, 0.62);
+    -webkit-backdrop-filter: blur(7px);
+    backdrop-filter: blur(7px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .pulse.is-open .pulse-dim { opacity: 1; }
+  .pulse-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0C0F12;
+    color: var(--ink);
+    transform: translateY(104%);
+    transition: transform 0.58s cubic-bezier(.2, .78, .2, 1);
+    clip-path: polygon(0 16px, 16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background-image:
+      radial-gradient(circle at 12px 18px, var(--brass) 0 1.4px, transparent 1.6px),
+      radial-gradient(circle at calc(100% - 12px) 18px, var(--brass) 0 1.4px, transparent 1.6px);
+    background-repeat: no-repeat;
+  }
+  .pulse.is-open .pulse-panel { transform: none; }
+  .pulse-top {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: calc(10px + var(--safe-t)) 16px 8px;
+    background: #0C0F12;
+    border-bottom: 1px solid rgba(140, 118, 76, 0.28);
+  }
+  .pulse-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-right: 40px;
+  }
+  .pulse-head .caps { color: var(--brass); }
+  .pulse-sub {
+    margin-top: 3px;
+    font-family: var(--display-ko);
+    font-size: 16px;
+  }
+  .pulse-close {
+    position: absolute;
+    top: calc(8px + var(--safe-t));
+    right: 50px;
+    width: 44px;
+    height: 36px;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .gauge-wrap { display: flex; justify-content: center; margin-top: 2px; }
+  .gauge-svg { width: min(100%, 280px); height: auto; }
+  .pulse-readout {
+    text-align: center;
+    font-family: var(--caps);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--ink-dim);
+    margin: 0 0 6px;
+  }
+  #pulse-body { padding: 8px 16px calc(24px + var(--safe-b)); }
+  .q-kicker { color: var(--brass); margin: 12px 0 8px; }
+  .q-prompt {
+    font-family: var(--display-ko);
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .q-choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 8px;
+    align-items: start;
+    width: 100%;
+    text-align: left;
+    padding: 12px 12px;
+    border: 1px solid var(--brass-line);
+    background: #14181b;
+    clip-path: var(--chamfer-sm);
+    line-height: 1.5;
+    font-size: 14.5px;
+  }
+  .choice-idx {
+    font-family: var(--caps);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--brass);
+    padding-top: 3px;
+  }
+  .choice.is-picked { border-color: var(--ink); background: #1a1e22; }
+
+  .cert {
+    position: relative;
+    margin-top: 12px;
+    padding: 16px 14px 14px;
+    border: 1px solid var(--brass-line);
+    background: #101316;
+    clip-path: var(--chamfer);
+  }
+  .cert-kicker { color: var(--brass); }
+  .cert h2 { font-size: 24px; margin: 6px 0 2px; }
+  .cert .latin { color: var(--ink-dim); font-size: 15px; }
+  .seal {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    width: 86px;
+    height: 86px;
+    opacity: 0;
+    transform: rotate(-18deg) scale(1.25);
+  }
+  .cert.is-in .seal { animation: stampIn 0.7s cubic-bezier(.2, 1.3, .3, 1) 0.05s forwards; }
+  @keyframes stampIn {
+    0% { opacity: 0; transform: rotate(-24deg) scale(1.4); }
+    65% { opacity: 1; transform: rotate(-12deg) scale(0.96); }
+    100% { opacity: 0.95; transform: rotate(-14deg) scale(1); }
+  }
+  .cert-photo {
+    position: relative;
+    width: 150px;
+    height: 200px;
+    margin: 16px auto 8px;
+  }
+  .cert-photo img { width: 100%; height: 100%; object-fit: contain; }
+  .cert-npc { text-align: center; }
+  .cert-npc .alias { font-size: 18px; color: var(--ink-dim); }
+  .cert-npc h3 { font-size: 20px; margin-top: 2px; }
+  .cert .spec { margin-top: 12px; }
+  .trait {
+    margin-top: 14px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .copy-preview {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(140, 118, 76, 0.28);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    word-break: keep-all;
+  }
+  .cert-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .text-btn {
+    min-height: 46px;
+    border: 1px solid var(--brass-line);
+    clip-path: var(--chamfer-sm);
+    font-family: var(--display-ko);
+    font-size: 14px;
+    background: #161a1d;
+  }
+  .text-btn.ghost { background: transparent; color: var(--ink-dim); }
+
+  /* modal */
+  .modal {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal.is-open { opacity: 1; pointer-events: auto; }
+  .modal-dim {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 6, 7, 0.55);
+  }
+  .modal-card {
+    position: relative;
+    width: min(100%, 320px);
+    padding: 22px 18px 16px;
+    background: rgba(10, 12, 14, 0.78);
+    -webkit-backdrop-filter: blur(10px) saturate(0.8);
+    backdrop-filter: blur(10px) saturate(0.8);
+    border: 1px solid var(--brass-line);
+    clip-path: var(--chamfer);
+  }
+  .modal-card .caps { color: var(--brass); }
+  .modal-card h2 {
+    margin: 10px 0 16px;
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+  .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+  .modal-actions .text-btn.go { border-color: rgba(122, 28, 36, 0.85); }
+
+  .toast {
+    position: absolute;
+    z-index: 96;
+    left: 16px;
+    right: 16px;
+    bottom: calc(18px + var(--safe-b));
+    padding: 12px 14px;
+    background: #14181b;
+    border: 1px solid var(--brass-line);
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.5;
+    clip-path: var(--chamfer-sm);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .toast.is-on { opacity: 1; transform: none; }
+
+  .ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background:
+      linear-gradient(rgba(140, 118, 76, 0.35), rgba(140, 118, 76, 0.35)) center / 1px 46% no-repeat,
+      linear-gradient(rgba(140, 118, 76, 0.35), rgba(140, 118, 76, 0.35)) center / 46% 1px no-repeat,
+      #101316;
+    border: 1px solid rgba(140, 118, 76, 0.4);
+    pointer-events: none;
+  }
+  .ph svg { width: 46%; height: auto; max-height: 58%; }
+  .ph-label {
+    font-family: var(--caps);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    text-align: center;
+    color: var(--ink-dim);
+    padding: 0 6px;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .noscript {
+    position: absolute;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: #0A0C0E;
+    text-align: center;
+  }
+
+  @media (max-height: 700px) {
+    .hero-mark { width: min(78%, 320px); }
+    .land-center { top: 44%; }
+    .editorial { min-height: 280px; height: 52dvh; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<!-- ============================================================
+     [SECTION 2: HTML]
+     반복되는 인물 카드, 연감 본문, 진단 문항은
+     SECTION 3 데이터를 SECTION 4가 여기에 채운다.
+     ============================================================ -->
+<div id="void">
+  <div id="stage" data-climate="wet" data-screen="landing">
+
+    <svg class="grain grain-paper" aria-hidden="true">
+      <filter id="grainPaper" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" stitchTiles="stitch" seed="7"/>
+        <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 1 0"/>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grainPaper)"/>
+    </svg>
+    <svg class="grain grain-fine" aria-hidden="true">
+      <filter id="grainFine" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="3"/>
+        <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0.85 0"/>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grainFine)"/>
+    </svg>
+
+    <button type="button" id="audio-btn" class="audio-btn is-off" aria-pressed="false" aria-label="배경음 재생">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 12.5 H10.5 L16.5 7.5 V24.5 L10.5 19.5 H6 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <path class="wave" d="M20 12.5 C22.2 14.2 22.2 17.8 20 19.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <path class="wave" d="M22.8 9.2 C26.4 12.2 26.4 19.8 22.8 22.8" fill="none" stroke="currentColor" stroke-width="1.2"/>
+        <path class="slash" d="M7 26 L26 6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </button>
+    <button type="button" id="skip-btn" class="skip-btn"><span>SKIP</span></button>
+
+    <section id="screen-landing" class="screen is-on" aria-hidden="false">
+      <div class="land-bg">
+        <img id="land-bg-img" alt="">
+        <div class="land-shade"></div>
+        <div class="fog" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="crop tl"></div><div class="crop tr"></div><div class="crop bl"></div><div class="crop br"></div>
+      <div class="reg"><span>FILE 00</span><span>THRESHOLD</span></div>
+      <p class="spine">VEL-ARCA BASIN ARCHIVE</p>
+      <div class="land-center">
+        <div class="hero-mark">
+          <svg id="reticle-svg" class="reticle-svg" viewBox="0 0 300 300" aria-hidden="true"></svg>
+          <div class="logo-slot"><img id="logo-img" alt="WET AND DRY"></div>
+          <svg class="flourish tl" viewBox="0 0 48 48" aria-hidden="true"><path d="M2 38 C2 12 12 2 38 2" fill="none" stroke="currentColor" stroke-width="0.7"/><path d="M8 38 C8 16 16 8 38 8" fill="none" stroke="currentColor" stroke-width="0.4"/><circle cx="2" cy="38" r="1.15" fill="currentColor"/></svg>
+          <svg class="flourish tr" viewBox="0 0 48 48" aria-hidden="true"><path d="M2 38 C2 12 12 2 38 2" fill="none" stroke="currentColor" stroke-width="0.7"/><path d="M8 38 C8 16 16 8 38 8" fill="none" stroke="currentColor" stroke-width="0.4"/><circle cx="2" cy="38" r="1.15" fill="currentColor"/></svg>
+          <svg class="flourish br" viewBox="0 0 48 48" aria-hidden="true"><path d="M2 38 C2 12 12 2 38 2" fill="none" stroke="currentColor" stroke-width="0.7"/><path d="M8 38 C8 16 16 8 38 8" fill="none" stroke="currentColor" stroke-width="0.4"/><circle cx="2" cy="38" r="1.15" fill="currentColor"/></svg>
+          <svg class="flourish bl" viewBox="0 0 48 48" aria-hidden="true"><path d="M2 38 C2 12 12 2 38 2" fill="none" stroke="currentColor" stroke-width="0.7"/><path d="M8 38 C8 16 16 8 38 8" fill="none" stroke="currentColor" stroke-width="0.4"/><circle cx="2" cy="38" r="1.15" fill="currentColor"/></svg>
+        </div>
+      </div>
+      <div class="enter-wrap">
+        <p class="land-file">Plate 00 · Restricted Circulation</p>
+        <button type="button" id="enter-btn" class="enter">
+          <span class="enter-plus" aria-hidden="true">+</span>
+          <span class="enter-label">TOUCH TO ENTER THE BASIN</span>
+          <span class="enter-rule a"></span>
+          <span class="enter-rule b"></span>
+        </button>
+      </div>
+    </section>
+
+    <section id="screen-vn" class="screen" aria-hidden="true">
+      <div class="vn-bg">
+        <div class="vn-layer" id="vn-layer-a"><img id="vn-bg-a" alt=""></div>
+        <div class="vn-layer" id="vn-layer-b"><img id="vn-bg-b" alt=""></div>
+      </div>
+      <div class="vn-progress">
+        <div class="vn-ruler"><span class="vn-ruler-fill" id="vn-fill"></span></div>
+        <span class="vn-count" id="vn-count">01 / 06</span>
+      </div>
+      <div class="vn-dialog" id="vn-dialog">
+        <p class="vn-speaker" id="vn-speaker"></p>
+        <p class="vn-text" id="vn-text"></p>
+        <p class="vn-hint">TOUCH</p>
+      </div>
+    </section>
+
+    <section id="screen-hub" class="screen" aria-hidden="true">
+      <div class="hub-atmos" id="particle-field" aria-hidden="true"></div>
+      <div class="hub-scroll" id="hub-scroll">
+        <header class="hub-header">
+          <div class="brand" aria-label="WET and DRY">
+            <span class="brand-w">W</span><span class="brand-amp">&amp;</span><span class="brand-d">D</span>
+            <small>VEL-ARCA</small>
+          </div>
+          <div class="tabs" id="tabs" role="tablist" data-tab="dossier">
+            <button type="button" class="tab" id="tab-dossier" role="tab" aria-selected="true" aria-controls="view-dossier">
+              <b>인물 대장</b><small>DOSSIER</small>
+            </button>
+            <button type="button" class="tab" id="tab-archive" role="tab" aria-selected="false" aria-controls="view-archive">
+              <b>분지 연감</b><small>ARCHIVE</small>
+            </button>
+            <span class="tab-bar" aria-hidden="true"></span>
+          </div>
+          <div class="header-audio-slot" aria-hidden="true"></div>
+        </header>
+
+        <div id="view-dossier" class="view is-on" role="tabpanel">
+          <div class="lever-block">
+            <div class="lever-meta">
+              <span class="caps">Climate Register</span>
+              <span class="latin" id="climate-read">Humiditas</span>
+            </div>
+            <div class="lever-mech" id="lever-mech">
+              <div class="lever-ruler" aria-hidden="true"></div>
+              <div class="lever-labels" aria-hidden="true"><span class="lab-wet">WET</span><span class="lab-dry">DRY</span></div>
+              <button type="button" id="lever-btn" class="lever-btn" aria-pressed="false" aria-label="WET에서 DRY로 전환">
+                <span class="lever-arm"><span class="lever-knob"></span></span>
+                <span class="lever-pivot"></span>
+              </button>
+            </div>
+            <p class="lever-note" id="lever-note"></p>
+          </div>
+          <div class="dossier-list" id="dossier-list"></div>
+          <button type="button" id="open-pulse-banner" class="persona-banner">
+            <span class="caps">Field Instrument</span>
+            <span class="persona-label">내 페르소나 진단하기 <em>→</em></span>
+          </button>
+        </div>
+
+        <div id="view-archive" class="view" role="tabpanel" hidden>
+          <figure class="arch-banner">
+            <div class="arch-photo"><img id="archive-banner-img" alt=""></div>
+            <figcaption>
+              <span class="caps">Imperial Geographical Society</span>
+              <strong>기밀 보고서</strong>
+              <span class="latin">Vel-Arca Basin, restricted plates</span>
+            </figcaption>
+          </figure>
+          <p class="arch-lead" id="archive-lead"></p>
+          <div id="archive-mount"></div>
+        </div>
+      </div>
+      <div class="climate-vig" aria-hidden="true"></div>
+    </section>
+
+    <div id="sheet" class="sheet" aria-hidden="true" inert>
+      <div class="sheet-bar">
+        <button type="button" id="sheet-close" aria-label="기록 닫기">×</button>
+        <span>PERSONAL DOSSIER</span>
+      </div>
+      <div class="sheet-body" id="sheet-body"></div>
+    </div>
+
+    <button type="button" id="fab" class="fab" aria-label="PULSE TEST">
+      <svg class="fab-svg" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30.2" fill="#0A0C0E" stroke="#8C764C" stroke-width="1"/>
+        <circle cx="32" cy="32" r="23" fill="none" stroke="#8C764C" stroke-width="0.4"/>
+        <g stroke="#8C764C" stroke-width="0.7">
+          <line x1="32" y1="4.5" x2="32" y2="10"/><line x1="32" y1="54" x2="32" y2="59.5"/>
+          <line x1="4.5" y1="32" x2="10" y2="32"/><line x1="54" y1="32" x2="59.5" y2="32"/>
+          <line x1="12.2" y1="12.2" x2="16" y2="16"/><line x1="48" y1="48" x2="51.8" y2="51.8"/>
+          <line x1="51.8" y1="12.2" x2="48" y2="16"/><line x1="16" y1="48" x2="12.2" y2="51.8"/>
+        </g>
+        <g class="fab-needle">
+          <line x1="32" y1="32" x2="32" y2="12" stroke="#D6D1C4" stroke-width="1.15"/>
+        </g>
+        <circle cx="32" cy="32" r="2.4" fill="#8C764C"/>
+      </svg>
+      <span class="fab-label">PULSE TEST</span>
+    </button>
+
+    <div id="pulse" class="pulse" aria-hidden="true" inert>
+      <div class="pulse-dim" id="pulse-dim"></div>
+      <div class="pulse-panel" role="dialog" aria-modal="true" aria-labelledby="pulse-title">
+        <div class="pulse-top">
+          <div class="pulse-head">
+            <div>
+              <p class="caps" id="pulse-title">Pulse Field Gauge</p>
+              <p class="pulse-sub">간이 계측기</p>
+            </div>
+          </div>
+          <button type="button" id="pulse-close" class="pulse-close" aria-label="닫기">×</button>
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" id="pulse-gauge" viewBox="0 0 240 132" aria-hidden="true">
+              <path d="M28 118 A92 92 0 0 1 212 118" fill="none" stroke="#8C764C" stroke-width="0.7"/>
+              <path d="M40 118 A80 80 0 0 1 120 40" fill="none" stroke="#1E4D54" stroke-width="1.2" opacity="0.85"/>
+              <path d="M120 40 A80 80 0 0 1 200 118" fill="none" stroke="#B86F28" stroke-width="1.2" opacity="0.85"/>
+              <g id="gauge-ticks"></g>
+              <circle id="pulse-ring" cx="120" cy="118" r="14" fill="none" stroke="#1E4D54" stroke-width="2" stroke-dasharray="88" stroke-dashoffset="50" transform="rotate(-90 120 118)" stroke-linecap="butt"/>
+              <g id="gauge-needle">
+                <line x1="120" y1="118" x2="120" y2="36" stroke="#D6D1C4" stroke-width="1.25"/>
+                <circle cx="120" cy="118" r="3.5" fill="#0A0C0E" stroke="#8C764C" stroke-width="1"/>
+              </g>
+              <text x="22" y="128" fill="#1E4D54" font-family="Cinzel, serif" font-size="8" letter-spacing="1.5">WET</text>
+              <text x="196" y="128" fill="#B86F28" font-family="Cinzel, serif" font-size="8" letter-spacing="1.5">DRY</text>
+            </svg>
+          </div>
+          <p id="pulse-readout" class="pulse-readout">W 00    D 00    PULSE IV</p>
+        </div>
+        <div id="pulse-body"></div>
+      </div>
+    </div>
+
+    <div id="iris" class="iris" aria-hidden="true"><div class="iris-ring"></div></div>
+    <div id="veil" class="veil" aria-hidden="true"></div>
+    <div id="logo-fx" class="logo-fx" aria-hidden="true">
+      <img id="logo-fx-img" alt="">
+    </div>
+
+    <div id="skip-modal" class="modal" aria-hidden="true" inert>
+      <div class="modal-dim" id="skip-dim"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="skip-title">
+        <p class="caps">Record Interrupted</p>
+        <h2 id="skip-title">기록 열람을 생략하시겠습니까?</h2>
+        <div class="modal-actions">
+          <button type="button" id="skip-confirm" class="text-btn go">건너뛰기</button>
+          <button type="button" id="skip-cancel" class="text-btn ghost">계속 보기</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <p id="climate-live" class="sr" aria-live="polite"></p>
+  </div>
+</div>
+<noscript><p class="noscript">이 기록은 스크립트가 있어야 열립니다.</p></noscript>
+
+<!-- ============================================================
+     [SECTION 3: ASSET & DATA CONFIG]
+     ============================================================ -->
+<script>
+/* 전역 공유를 위해 var. 파일명·확장자·문구는 이 구역만 수정한다. */
+var ASSET_ROOT = "./assets";
+var BGM_SRC = "./bgm.mp3";
+
+/*
+  폴더를 asset 으로 바꾸면 ASSET_ROOT 만 고친다.
+  파일명이나 확장자(.png .webp .jpg)는 아래 문자열만 고친다.
+  현재 값은 저장소의 ./assets/ 실파일과 같다.
+*/
+var ASSET_MANIFEST = {
+  logo: "logo/wad-main-logo.png",
+  backgrounds: [
+    "background/vel-arca-1.png",
+    "background/crossroad-night-2.png",
+    "background/wad-3.png",
+    "background/high-castle-4.png",
+    "background/mushroom-forest-5.png",
+    "background/startimage-6.png"
+  ],
+  archiveBanner: "background/vel-arca-1.png",
+  characters: {
+    viessa: {
+      portrait: "frame-portrait/viessa-frame-portrait.png",
+      standing: "standing/viessa-hero-standing.png",
+      sticker: "sticker/viessa-chibi-sticker.png"
+    },
+    valeria: {
+      portrait: "frame-portrait/valeria-frame-portrait.png",
+      standing: "standing/valeria-hero-standing.png",
+      sticker: "sticker/valeria-chibi-sticker.png"
+    },
+    odile: {
+      portrait: "frame-portrait/odile-frame-portrait.png",
+      standing: "standing/odile-hero-standing.png",
+      sticker: "sticker/odile-chibi-sticker.png"
+    },
+    shezu: {
+      portrait: "frame-portrait/shezu-frame-portrait.png",
+      standing: "standing/shezu-hero-standing.png",
+      sticker: "sticker/shezu-chibi-sticker.png"
+    },
+    popori: {
+      portrait: "frame-portrait/popori-frame-portrait.png",
+      standing: "standing/popori-hero-standing.png",
+      sticker: "sticker/popori-chibi-sticker.png"
+    },
+    aywin: {
+      portrait: "frame-portrait/aywin-frame-portrait.png",
+      standing: "standing/aywin-hero-standing.png",
+      sticker: "sticker/aywin-chibi-sticker.png"
+    },
+    kuorath: {
+      portrait: "frame-portrait/kuorath-frame-portrait.png",
+      standing: "standing/kuorath-hero-standing.png",
+      sticker: "sticker/kuorath-chibi-sticker.png"
+    },
+    sthildrune: {
+      portrait: "frame-portrait/sthildrune-frame-portrait.png",
+      standing: "standing/sthildrune-hero-standing.png",
+      sticker: "sticker/sthildrune-chibi-sticker.png"
+    },
+    grebuiftee: {
+      portrait: "frame-portrait/grebuiftee-frame-portrait.png",
+      standing: "standing/grebuiftee-hero-standing.png",
+      sticker: "sticker/grebuiftee-chibi-sticker.png"
+    },
+    zitoth: {
+      portrait: "frame-portrait/zitoth-frame-portrait.png",
+      standing: "standing/zitoth-hero-standing.png",
+      sticker: "sticker/zitoth-chibi-sticker.png"
+    }
+  }
+};
+
+function joinAsset(path) {
+  return ASSET_ROOT.replace(/\/$/, "") + "/" + String(path).replace(/^\//, "");
+}
+
+var ASSET_CONFIG = {
+  bgm: BGM_SRC,
+  logo: joinAsset(ASSET_MANIFEST.logo),
+  backgrounds: ASSET_MANIFEST.backgrounds.map(joinAsset),
+  archiveBanner: joinAsset(ASSET_MANIFEST.archiveBanner),
+  characters: {}
+};
+Object.keys(ASSET_MANIFEST.characters).forEach(function (key) {
+  var item = ASSET_MANIFEST.characters[key];
+  ASSET_CONFIG.characters[key] = {
+    portrait: joinAsset(item.portrait),
+    standing: joinAsset(item.standing),
+    sticker: joinAsset(item.sticker)
+  };
+});
+
+/* 임시 더미. 문자열만 갈아끼우면 된다. 인물 key 는 ASSET_MANIFEST 와 같아야 한다. */
+var DATA = {
+  ui: {
+    archiveBannerAlt: "벨-아르카 분지의 시계탑 성채",
+    archiveLead: "제국 지리학회가 외부 반출을 금한 분지 기록의 발췌. 아래 목차는 열람용 임시 문안이다."
+  },
+  climate: {
+    wet: {
+      latin: "Humiditas",
+      reading: "0.73",
+      note: "응결이 장부 위를 이긴다. 숨이 유리에 남는다."
+    },
+    dry: {
+      latin: "Siccitas",
+      reading: "0.81",
+      note: "수분이 철에서 달아난다. 재만 눈금을 남긴다."
+    }
+  },
+  rosters: {
+    wet: ["viessa", "valeria", "odile", "shezu", "popori"],
+    dry: ["aywin", "kuorath", "sthildrune", "grebuiftee", "zitoth"]
+  },
+  vn: [
+    {
+      speaker: "기록관",
+      alt: "협곡 위 시계탑 성채",
+      text: "협곡의 바닥에 시계탑이 서 있다. 폭포는 끊기지 않고, 청록 등잔만이 밤의 가장자리를 센다. 이곳이 벨-아르카 분지다."
+    },
+    {
+      speaker: "기록관",
+      alt: "젖은 골목과 가스등",
+      text: "등불이 젖은 돌 위에 길게 꺾인다. 골목은 황동의 냄새와 안개를 같이 머금는다. 발소리를 지우지 못한 자만이 장부에 남는다."
+    },
+    {
+      speaker: "기록관",
+      alt: "물과 불 사이의 압력계",
+      text: "물과 불은 같은 유리관 안에서 서로를 측정한다. 젖음은 기억을 남기고, 마름은 이름을 태운다. 분지의 주민은 그 사이 어디쯤으로 불린다."
+    },
+    {
+      speaker: "기록관",
+      alt: "별을 가둔 고딕 성좌",
+      text: "높은 성좌는 별을 가두어 첨탑으로 삼았다. 제국은 그 빛으로 등급을 매긴다. 기도는 짧고, 조서는 길다."
+    },
+    {
+      speaker: "기록관",
+      alt: "포자가 빛나는 숲의 폐허",
+      text: "가장자리의 숲은 포자로 숨 쉰다. 무너진 아치 아래, 물소리만은 아직 제국의 도장을 받지 않았다."
+    },
+    {
+      speaker: "기록관",
+      alt: "등잔 아래의 분지 지도",
+      text: "등잔 아래의 지도는 따뜻하고, 잉크는 차갑다. 당신은 열람자로서 여기에 도착했다. 장부를 펼치기 전에, 숨부터 고르라."
+    }
+  ],
+  characters: {
+    viessa: {
+      key: "viessa",
+      faction: "wet",
+      name: "비에사 밀드레드",
+      alias: "The Ledger Horn",
+      species: "뿔 있는 야간 서기종",
+      pulse: 8,
+      affiliation: "제국 야간 장부국",
+      quote: "젖은 잉크만이 거짓을 견디지 못한다.",
+      rumor: [
+        "골목에서는 그의 안경알에 오늘 밤의 시세가 비친다고 수군댄다.",
+        "장부 여백에 적힌 이니셜이 발레리아의 것과 같다는 찌라시가 돌았으나, 다음날 그 종이는 축축하게 녹아 없어졌다."
+      ],
+      stickerLine: "장부는 이미 너를 적었다."
+    },
+    valeria: {
+      key: "valeria",
+      faction: "wet",
+      name: "발레리아",
+      alias: "Iron Orchid",
+      species: "야간 장교종",
+      pulse: 9,
+      affiliation: "분지 위병 사령부",
+      quote: "훈장은 피가 마르기 전에 단다.",
+      rumor: [
+        "예복의 은술 뒤에는 분지 바깥으로 내보낸 이름의 목록이 꿰매져 있다는 소문.",
+        "부하들은 그녀의 이를 볼 때만 경례가 반 박자 늦어진다."
+      ],
+      stickerLine: "열중. 숨도 조서다."
+    },
+    odile: {
+      key: "odile",
+      faction: "wet",
+      name: "오딜",
+      alias: "The Measure",
+      species: "직조 거미형",
+      pulse: 7,
+      affiliation: "황실 직조실",
+      quote: "치수가 맞으면, 운명도 맞는다.",
+      rumor: [
+        "손님의 소매에 남은 실은 사흘 뒤 그 사람의 약점을 풀어 보여 준다.",
+        "셋째 눈은 감지 않고, 대신 상대의 박자를 잰다는 말이 있다."
+      ],
+      stickerLine: "소매 좀. 실이 풀렸네."
+    },
+    shezu: {
+      key: "shezu",
+      faction: "wet",
+      name: "셰즈",
+      alias: "Cyan Stitch",
+      species: "봉합된 시인",
+      pulse: 5,
+      affiliation: "골목 정보 조합",
+      quote: "입은 꿰매도, 연기는 새어 나간다.",
+      rumor: [
+        "청록 앞머리는 젖은 잉크로 염색한 것이 아니라, 누군가의 계약서에서 번진 색이라는 설.",
+        "그가 피운 엽궐련의 재에는 오늘의 배신자 이니셜이 한 글자 남는다."
+      ],
+      stickerLine: "싸구려 비밀은 연기에 넣어 판다."
+    },
+    popori: {
+      key: "popori",
+      faction: "wet",
+      name: "포포리",
+      alias: "Spore Pocket",
+      species: "포자 아이",
+      pulse: 3,
+      affiliation: "가장자리 숲 채집대",
+      quote: "다친 무릎보다, 병 마개가 먼저야.",
+      rumor: [
+        "주머니 속 병의 이끼는 분지 우물의 수위를 따라 오르내린다.",
+        "어른들은 그를 아이로 적지만, 숲은 그를 경계표로 대한다."
+      ],
+      stickerLine: "이 버섯은 길을 기억해."
+    },
+    aywin: {
+      key: "aywin",
+      faction: "dry",
+      name: "아윈 유리레드",
+      alias: "Glass Ember",
+      species: "유리공 연금술사",
+      pulse: 6,
+      affiliation: "건조로 연금 공방",
+      quote: "불은 병에 넣을 수 있다. 후회는 아니다.",
+      rumor: [
+        "손에 앉은 푸른 불은 젖은 구역의 샘플이라는 설. 본인은 건조로의 부산물이라 우긴다.",
+        "고글 렌즈 안에 타인의 체온이 숫자로 맺힌다는 공방 괴담."
+      ],
+      stickerLine: "뚜껑은 내가 연다. 너는 물러서."
+    },
+    kuorath: {
+      key: "kuorath",
+      faction: "dry",
+      name: "쿠오라",
+      alias: "Ribbon Axe",
+      species: "녹색 도끼 전사",
+      pulse: 7,
+      affiliation: "적토 외곽 용병대",
+      quote: "리본은 장식이 아니다. 횟수다.",
+      rumor: [
+        "분홍 리본 하나는 살려 보낸 이름, 하나는 베지 않기로 한 이름이라고 한다.",
+        "뼈 목걸이의 개수가 용병 계약서 매수와 같다는 시장 소문."
+      ],
+      stickerLine: "도끼는 가볍다. 약속이 무겁지."
+    },
+    sthildrune: {
+      key: "sthildrune",
+      faction: "dry",
+      name: "시실드룬",
+      alias: "Dune Sting",
+      species: "전갈꼬리 유랑자",
+      pulse: 8,
+      affiliation: "사구 순례 길드",
+      quote: "모래는 발자국을 먹지, 독을 먹진 않는다.",
+      rumor: [
+        "꼬리의 독은 건조할수록 맑아지고, 비가 오면 탁해진다는 길드 내규.",
+        "붕대 아래의 비늘은 성좌의 창을 막고 남은 자리라는 떠돌이 시."
+      ],
+      stickerLine: "바람 쪽로 걸어. 독은 아래로 떨어져."
+    },
+    grebuiftee: {
+      key: "grebuiftee",
+      faction: "dry",
+      name: "그레비티",
+      alias: "Hearth Matron",
+      species: "난로 지기의 혈통",
+      pulse: 4,
+      affiliation: "난로 여관 조합",
+      quote: "국이 식기 전에 이름을 말해.",
+      rumor: [
+        "앞치마 주머니의 흰 수건은 밀린 외상 장부라고 단골들이 믿는다.",
+        "그녀가 웃으면 그날 밤의 건조 지수가 한 눈금 오른다는 헛소문. 반은 맞다."
+      ],
+      stickerLine: "앉으렴. 재는 내가 턴다."
+    },
+    zitoth: {
+      key: "zitoth",
+      faction: "dry",
+      name: "지토트",
+      alias: "Moss Saint",
+      species: "이끼 입은 석상",
+      pulse: 9,
+      affiliation: "석상 수도원 잔류 수호",
+      quote: "금은 깨진 뒤에야 문장이 된다.",
+      rumor: [
+        "갑옷의 문자는 죽은 수도사의 서약이고, 이끼는 아직 철회되지 않은 부분이라는 해석.",
+        "검을 양손으로 쥔 채 백 년을 섰으므로, 악수는 거절하는 것이 아니라 불가능하다."
+      ],
+      stickerLine: "……서약. 아직 유효하다."
+    }
+  },
+  archive: [
+    {
+      no: "01",
+      title: "벨-아르카 분지",
+      kicker: "GEOGRAPHY",
+      paragraphs: [
+        "분지는 적토 협곡의 바닥에 가라앉은 원형 성채와, 그 주위를 감는 폭포, 그리고 성채가 삼키지 못한 가장자리로 이루어진다. 시계탑은 시간을 알리기보다 습도의 주기를 알린다.",
+        "공식 지도는 성채를 중심으로 동심원을 그린다. 비공식 지도는 골목의 물웅덩이와 건조로의 균열을 먼저 찍는다. 두 지도가 겹치는 밤, 분지는 잠시 정직해진다.",
+        "임시 문안. 지명, 구역 명칭, 출입 금지를 여기에 덧붙이면 된다."
+      ]
+    },
+    {
+      no: "02",
+      title: "화폐와 물가",
+      kicker: "LEDGER",
+      paragraphs: [
+        "분지의 동전은 젖으면 무게가 늘고, 마르면 소리가 높아진다. 상인은 같은 동전을 아침과 밤에 다르게 센다.",
+        "공식 시세는 성채 게시판에, 실제 시세는 셰즈의 연기와 그레비티의 외상 수건에 따로 적힌다.",
+        "임시 문안. 화폐 단위와 물가 표는 이 단락을 표로 바꿔 채우면 된다."
+      ]
+    },
+    {
+      no: "03",
+      title: "Wet & Dry 생리",
+      kicker: "HUMOURS",
+      paragraphs: [
+        "Wet 는 기억을 표면에 남긴다. 잉크, 김, 이끼, 소문이 그 증거다. 몸이 젖은 쪽에 기우는 자는 남의 비밀을 옷감처럼 걸친다.",
+        "Dry 는 이름을 태우고 뼈대만 남긴다. 재, 균열, 열, 서약이 그 증거다. 마른 쪽에 기우는 자는 한 번의 마찰로 장부를 줄인다.",
+        "둘은 질병이 아니라 분지가 사람을 분류하는 기후다. 같은 혈통도 계절처럼 기울 수 있으나, 계측기는 오늘의 기울기만 적는다."
+      ]
+    },
+    {
+      no: "04",
+      title: "PULSE 등급",
+      kicker: "ASSAY",
+      gradeTable: true,
+      paragraphs: [
+        "PULSE 는 존재의 압력이다. 1은 거의 식은 심지, 9는 성좌가 함부로 다루지 않는 주권에 가깝다. 등급은 도덕이 아니라 계측값이다.",
+        "임시 등급명. 아래 표의 이름과 영문은 pulseGrades 에서 고친다."
+      ]
+    },
+    {
+      no: "05",
+      title: "분지 속어 사전",
+      kicker: "LEXICON",
+      paragraphs: ["사전에 없는 말은 아직 거래되지 않은 말이다. 아래는 임시 표제어다."],
+      entries: [
+        { term: "펄스", def: "사람이나 물건이 주변에 가하는 압력. 숫자로 말하면 등급, 속어로 말하면 존재감." },
+        { term: "젖은 장부", def: "공식 문서가 아니라, 지워도 번져 남는 기록. 주로 야간 장부국의 영역." },
+        { term: "마른 이름", def: "한 번 불리면 되물리지 않는 이름. 건조로와 용병 계약에서 자주 쓰인다." },
+        { term: "분지", def: "지명이자, 빠져나갈 수 없다는 말의 줄임. 바깥사람은 계곡이라 부르고, 안사람은 그릇이라 부른다." },
+        { term: "찌라시", def: "도장 없는 진실. 유통이 금지되어 있으므로 누구나 읽는다." },
+        { term: "계측", def: "오늘의 Wet/Dry 와 PULSE 를 바늘로 읽는 일. 사교인 척하는 심문." }
+      ]
+    }
+  ],
+  pulseGrades: {
+    "1": { roman: "I", name: "잔불", en: "Dormant" },
+    "2": { roman: "II", name: "점화", en: "Flicker" },
+    "3": { roman: "III", name: "심지", en: "Wick" },
+    "4": { roman: "IV", name: "유지", en: "Steady" },
+    "5": { roman: "V", name: "각인", en: "Marked" },
+    "6": { roman: "VI", name: "명맥", en: "Bright" },
+    "7": { roman: "VII", name: "과압", en: "Severe" },
+    "8": { roman: "VIII", name: "임계", en: "Critical" },
+    "9": { roman: "IX", name: "주권", en: "Sovereign" }
+  },
+  traits: {
+    wet: {
+      low: "안개에 번진 잉크처럼, 당신은 젖은 기억을 오래 붙든다.",
+      mid: "분지의 습기가 판단 위에 얇은 막을 남긴다. 비밀이 옷깃에 맺힌다.",
+      high: "과포화된 맥. 가까이 선 자의 비밀이 물기처럼 묻어난다."
+    },
+    dry: {
+      low: "재가 되기 전의 온기. 이름은 아직 바삭하게 마르지 않았다.",
+      mid: "마른 바람 쪽의 사람. 불필요한 습기를 견디지 못한다.",
+      high: "임계에 가까운 건조. 한 번의 마찰로 장부가 탄다."
+    }
+  },
+  quizMeta: {
+    basePulse: 4,
+    resultImage: "portrait",
+    tiePulseAtLeast: 5
+  },
+  /*
+    문항 6. choice 필드:
+    wet, dry — 기후 점수
+    pulse — basePulse 에 더함 (음수 가능, 최종 1~9로 자름)
+    affinity — 인물 key 별 가산. 가장 높은 인물이 초기 인연.
+    동점이면 판정된 진영에 0.2, 그래도 같으면 명단 앞순서.
+  */
+  quiz: [
+    {
+      prompt: "분지에 첫발을 디딘 밤, 당신이 먼저 맡는 것은?",
+      choices: [
+        { label: "젖은 돌과, 아직 마르지 않은 장부 냄새.", wet: 2, dry: 0, pulse: 0, affinity: { viessa: 5, valeria: 1 } },
+        { label: "마른 먼지와, 오래 쓴 쇠의 냄새.", wet: 0, dry: 2, pulse: 1, affinity: { kuorath: 5, sthildrune: 1 } },
+        { label: "식어 가는 램프 기름.", wet: 1, dry: 1, pulse: -1, affinity: { aywin: 5 } }
+      ]
+    },
+    {
+      prompt: "주머니를 뒤집으면 무엇이 남는가?",
+      choices: [
+        { label: "훈장에서 떨어진 핀.", wet: 1, dry: 0, pulse: 2, affinity: { valeria: 5, viessa: 1 } },
+        { label: "치수 재는 핀과, 끊어진 실.", wet: 2, dry: 0, pulse: -1, affinity: { odile: 5, shezu: 1 } },
+        { label: "모래가 든 장갑.", wet: 0, dry: 2, pulse: 1, affinity: { sthildrune: 5, zitoth: 1 } }
+      ]
+    },
+    {
+      prompt: "골목에서 발을 멈추게 하는 것은?",
+      choices: [
+        { label: "입을 꿰맨 자가 흘리는 소문.", wet: 1, dry: 0, pulse: -1, affinity: { shezu: 5, grebuiftee: 1 } },
+        { label: "어린 포자 냄새. 숲이 여기까지 왔다.", wet: 2, dry: 0, pulse: -1, affinity: { popori: 5, odile: 1 } },
+        { label: "금 간 돌이 지키는 침묵.", wet: 0, dry: 1, pulse: 1, affinity: { zitoth: 5, kuorath: 1 } }
+      ]
+    },
+    {
+      prompt: "당신 이름으로 철하려면 무엇을 적겠는가?",
+      choices: [
+        { label: "난로 옆의 빈 자리.", wet: 0, dry: 1, pulse: 0, affinity: { grebuiftee: 5, aywin: 1 } },
+        { label: "조서의 여백. 아직 서명되지 않은 줄.", wet: 1, dry: 0, pulse: 1, affinity: { viessa: 2 } },
+        { label: "아무도 서명하지 않은 여백.", wet: 1, dry: 1, pulse: 0, affinity: { zitoth: 1, popori: 1 } }
+      ]
+    },
+    {
+      prompt: "질문을 받으면 어떻게 답하는가?",
+      choices: [
+        { label: "조문처럼, 짧고 회수되지 않게.", wet: 1, dry: 0, pulse: 1, affinity: { valeria: 2 } },
+        { label: "농담으로 장부를 가린다.", wet: 1, dry: 1, pulse: 0, affinity: { grebuiftee: 1, shezu: 1 } },
+        { label: "거의 말하지 않는다.", wet: 0, dry: 1, pulse: 1, affinity: { sthildrune: 1, zitoth: 1 } }
+      ]
+    },
+    {
+      prompt: "유리관 앞에서 당신의 손은?",
+      choices: [
+        { label: "푸른 불을 병에 담는다.", wet: 1, dry: 1, pulse: 1, affinity: { aywin: 1 } },
+        { label: "비를 받아, 적히게 둔다.", wet: 2, dry: 0, pulse: 0, affinity: { popori: 1, odile: 1, viessa: 1 } },
+        { label: "금속이 기억할 때까지 친다.", wet: 0, dry: 2, pulse: 2, affinity: { kuorath: 1, sthildrune: 1 } }
+      ]
+    }
+  ]
+};
+</script>
+
+<!-- ============================================================
+     [SECTION 4: JS LOGIC]
+     문구를 넣지 말 것. 화면 문장은 DATA, 경로는 ASSET_CONFIG.
+     ============================================================ -->
+<script>
+(function () {
+  "use strict";
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var IRIS_MS = reduceMotion ? 1 : 700;
+
+  var stage = byId("stage");
+  var hubScroll = byId("hub-scroll");
+  var sheet = byId("sheet");
+  var sheetBody = byId("sheet-body");
+  var sheetClose = byId("sheet-close");
+  var pulse = byId("pulse");
+  var pulseBody = byId("pulse-body");
+  var pulseDim = byId("pulse-dim");
+  var pulseClose = byId("pulse-close");
+  var pulseReadout = byId("pulse-readout");
+  var gaugeNeedle = byId("gauge-needle");
+  var pulseRing = byId("pulse-ring");
+  var toast = byId("toast");
+  var iris = byId("iris");
+  var veil = byId("veil");
+  var logoFx = byId("logo-fx");
+  var modal = byId("skip-modal");
+  var audioBtn = byId("audio-btn");
+  var leverBtn = byId("lever-btn");
+  var leverMech = byId("lever-mech");
+  var climateRead = byId("climate-read");
+  var leverNote = byId("lever-note");
+  var climateLive = byId("climate-live");
+  var dossierList = byId("dossier-list");
+  var archiveMount = byId("archive-mount");
+  var tabs = byId("tabs");
+  var vnText = byId("vn-text");
+  var vnSpeaker = byId("vn-speaker");
+  var vnCount = byId("vn-count");
+  var vnFill = byId("vn-fill");
+  var layerA = byId("vn-layer-a");
+  var layerB = byId("vn-layer-b");
+
+  var audio = new Audio(ASSET_CONFIG.bgm);
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.setAttribute("playsinline", "");
+  var userMuted = false;
+  var heldByModal = false;
+  var fadeRaf = 0;
+  var entered = false;
+  var arriving = false;
+  var sceneIndex = 0;
+  var sceneLock = false;
+  var bgToggle = 0;
+  var savedScroll = 0;
+  var gaugeRaf = 0;
+  var toastTimer = 0;
+  var bubbleTimer = 0;
+  var lastResult = null;
+
+  var typer = { text: "", i: 0, done: true, timer: 0, paused: false };
+  var quiz = freshQuiz();
+
+  function byId(id) { return document.getElementById(id); }
+  function pad(n) {
+    n = Math.max(0, n | 0);
+    return (n < 10 ? "0" : "") + n;
+  }
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function gradeOf(n) {
+    var g = DATA.pulseGrades[String(n)];
+    return g || { roman: String(n), name: "", en: "" };
+  }
+  function rosterKeys() {
+    return DATA.rosters.wet.concat(DATA.rosters.dry);
+  }
+  function setOpen(el, on) {
+    el.classList.toggle("is-open", on);
+    el.setAttribute("aria-hidden", on ? "false" : "true");
+    try { el.inert = !on; } catch (err) { /* older webviews */ }
+  }
+
+  function placeholderElement(label) {
+    var el = document.createElement("div");
+    el.className = "ph";
+    el.setAttribute("role", "img");
+    el.setAttribute("aria-label", label || "plate unregistered");
+    el.innerHTML =
+      '<svg viewBox="0 0 120 150" aria-hidden="true">' +
+        '<rect x="2" y="2" width="116" height="146" fill="none" stroke="#8C764C" stroke-width="0.7"/>' +
+        '<rect x="7" y="7" width="106" height="136" fill="none" stroke="#3C5E5A" stroke-width="0.45"/>' +
+        '<circle cx="60" cy="72" r="16" fill="none" stroke="#8C764C" stroke-width="0.7"/>' +
+        '<path d="M60 56 V88 M44 72 H76" stroke="#8C764C" stroke-width="0.6"/>' +
+        '<path d="M8 8 H18 M8 8 V18 M112 8 H102 M112 8 V18 M8 142 H18 M8 142 V132 M112 142 H102 M112 142 V132" stroke="#8C764C" stroke-width="0.8"/>' +
+      "</svg>" +
+      '<span class="ph-label">' + escapeHtml(label || "PLATE UNREGISTERED") + "</span>";
+    return el;
+  }
+
+  function assignImage(img, src, alt) {
+    if (!img) return;
+    img.alt = alt || "";
+    img.draggable = false;
+    var parent = img.parentNode;
+    if (parent) {
+      var old = parent.querySelector(":scope > .ph");
+      if (old) old.remove();
+    }
+    img.classList.remove("is-broken");
+    img.onerror = function () {
+      img.onerror = null;
+      img.classList.add("is-broken");
+      if (parent && !parent.querySelector(":scope > .ph")) {
+        parent.appendChild(placeholderElement(alt || "PLATE UNREGISTERED"));
+      }
+    };
+    if (!src) {
+      img.onerror();
+      return;
+    }
+    img.src = src;
+  }
+
+  function ticksHtml(n) {
+    var html = '<span class="ticks">';
+    var value = clamp(n | 0, 0, 9);
+    var i;
+    for (i = 1; i <= 9; i += 1) {
+      html += '<i class="' + (i <= value ? "is-on" : "") + (i % 3 === 0 ? " is-major" : "") + '"></i>';
+    }
+    return html + "</span>";
+  }
+
+  function buildReticle() {
+    var svg = byId("reticle-svg");
+    if (!svg) return;
+    function el(name, attrs) {
+      var node = document.createElementNS(SVG_NS, name);
+      Object.keys(attrs).forEach(function (key) { node.setAttribute(key, attrs[key]); });
+      return node;
+    }
+    svg.appendChild(el("circle", { cx: "150", cy: "150", r: "146", fill: "none", stroke: "#8C764C", "stroke-width": "0.45" }));
+    svg.appendChild(el("circle", { cx: "150", cy: "150", r: "112", fill: "none", stroke: "#3C5E5A", "stroke-width": "0.4" }));
+    svg.appendChild(el("circle", { cx: "150", cy: "150", r: "78", fill: "none", stroke: "#8C764C", "stroke-width": "0.35", "stroke-dasharray": "1.2 3.2" }));
+    var g = el("g", {});
+    var i;
+    for (i = 0; i < 120; i += 1) {
+      var ang = (i / 120) * Math.PI * 2;
+      var major = i % 10 === 0;
+      var mid = i % 5 === 0;
+      var inner = major ? 128 : (mid ? 134 : 139);
+      g.appendChild(el("line", {
+        x1: (150 + inner * Math.cos(ang)).toFixed(2),
+        y1: (150 + inner * Math.sin(ang)).toFixed(2),
+        x2: (150 + 146 * Math.cos(ang)).toFixed(2),
+        y2: (150 + 146 * Math.sin(ang)).toFixed(2),
+        stroke: "#8C764C",
+        "stroke-width": major ? "0.9" : "0.4"
+      }));
+    }
+    svg.appendChild(g);
+    ["M150 6 V42", "M150 258 V294", "M6 150 H42", "M258 150 H294"].forEach(function (d) {
+      svg.appendChild(el("path", { d: d, fill: "none", stroke: "#8C764C", "stroke-width": "0.55" }));
+    });
+    [[150, 16], [284, 150], [150, 284], [16, 150]].forEach(function (p) {
+      svg.appendChild(el("circle", { cx: String(p[0]), cy: String(p[1]), r: "1.5", fill: "#8C764C" }));
+    });
+  }
+
+  function buildGaugeTicks() {
+    var g = byId("gauge-ticks");
+    if (!g) return;
+    var i;
+    for (i = 0; i <= 16; i += 1) {
+      var t = i / 16;
+      var theta = Math.PI - t * Math.PI;
+      var inner = i % 4 === 0 ? 74 : 80;
+      var line = document.createElementNS(SVG_NS, "line");
+      line.setAttribute("x1", (120 + inner * Math.cos(theta)).toFixed(2));
+      line.setAttribute("y1", (118 - inner * Math.sin(theta)).toFixed(2));
+      line.setAttribute("x2", (120 + 90 * Math.cos(theta)).toFixed(2));
+      line.setAttribute("y2", (118 - 90 * Math.sin(theta)).toFixed(2));
+      line.setAttribute("stroke", t < 0.5 ? "#3C5E5A" : "#8C764C");
+      line.setAttribute("stroke-width", i % 4 === 0 ? "1.1" : "0.55");
+      g.appendChild(line);
+    }
+  }
+
+  function buildParticles() {
+    var field = byId("particle-field");
+    if (!field) return;
+    var html = "";
+    var i;
+    for (i = 0; i < 12; i += 1) {
+      var size = (2 + Math.random() * 3).toFixed(1);
+      html += '<i class="mote mist" style="left:' + (Math.random() * 100).toFixed(1) +
+        "%;width:" + size + "px;height:" + size + "px;animation-duration:" + (14 + Math.random() * 16).toFixed(1) +
+        "s;animation-delay:" + (-Math.random() * 20).toFixed(1) + "s;--dx:" + ((Math.random() * 40) - 20).toFixed(0) + 'px"></i>';
+    }
+    for (i = 0; i < 4; i += 1) {
+      html += '<i class="mote mist wide" style="left:' + (Math.random() * 80).toFixed(1) +
+        '%;width:90px;height:36px;animation-duration:' + (20 + Math.random() * 14).toFixed(1) +
+        "s;animation-delay:" + (-Math.random() * 18).toFixed(1) + 's;--dx:18px"></i>';
+    }
+    for (i = 0; i < 16; i += 1) {
+      var w = Math.random() > 0.6 ? 2 : 1;
+      var h = Math.random() > 0.5 ? 4 : 2;
+      html += '<i class="mote ash" style="left:' + (Math.random() * 100).toFixed(1) +
+        "%;width:" + w + "px;height:" + h + "px;animation-duration:" + (9 + Math.random() * 12).toFixed(1) +
+        "s;animation-delay:" + (-Math.random() * 14).toFixed(1) + "s;--dx:" + ((Math.random() * 28) - 10).toFixed(0) + 'px"></i>';
+    }
+    field.innerHTML = html;
+  }
+
+  function preload() {
+    ASSET_CONFIG.backgrounds.forEach(function (src) {
+      var img = new Image();
+      img.src = src;
+    });
+    var logo = new Image();
+    logo.src = ASSET_CONFIG.logo;
+  }
+
+  function fadeVolume(to, ms) {
+    var from = audio.volume;
+    var t0 = performance.now();
+    cancelAnimationFrame(fadeRaf);
+    function step(now) {
+      var k = Math.min(1, (now - t0) / ms);
+      audio.volume = from + (to - from) * k;
+      if (k < 1) fadeRaf = requestAnimationFrame(step);
+    }
+    fadeRaf = requestAnimationFrame(step);
+  }
+
+  function syncAudioIcon() {
+    var on = !audio.paused;
+    audioBtn.classList.toggle("is-off", !on);
+    audioBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    audioBtn.setAttribute("aria-label", on ? "배경음 일시정지" : "배경음 재생");
+  }
+
+  function toggleAudio() {
+    if (audio.paused) {
+      userMuted = false;
+      heldByModal = false;
+      audio.volume = 0.62;
+      var playPromise = audio.play();
+      if (playPromise && playPromise.catch) playPromise.catch(function () {});
+    } else {
+      userMuted = true;
+      heldByModal = false;
+      audio.pause();
+    }
+    syncAudioIcon();
+  }
+
+  function fadeInBgm() {
+    if (userMuted) return;
+    if (audio.paused) {
+      audio.volume = 0;
+      var playPromise = audio.play();
+      var start = function () { fadeVolume(0.62, 1200); syncAudioIcon(); };
+      if (playPromise && playPromise.then) playPromise.then(start, function () {});
+      else start();
+    } else if (audio.volume < 0.5) {
+      fadeVolume(0.62, 800);
+    }
+    syncAudioIcon();
+  }
+
+  function resumeHeld() {
+    if (heldByModal && !userMuted) {
+      var playPromise = audio.play();
+      if (playPromise && playPromise.catch) playPromise.catch(function () {});
+    }
+    heldByModal = false;
+    syncAudioIcon();
+  }
+
+  function setScreen(name) {
+    ["landing", "vn", "hub"].forEach(function (key) {
+      var el = byId("screen-" + key);
+      var on = key === name;
+      el.classList.toggle("is-on", on);
+      el.setAttribute("aria-hidden", on ? "false" : "true");
+    });
+    stage.setAttribute("data-screen", name);
+  }
+
+  function irisRadius() {
+    return Math.ceil(Math.hypot(stage.clientWidth, stage.clientHeight) / 2) + 8;
+  }
+
+  function runIris(fromR, toR) {
+    return new Promise(function (resolve) {
+      iris.style.setProperty("--r", fromR + "px");
+      iris.style.setProperty("--spin", "0deg");
+      iris.classList.add("is-active");
+      var t0 = performance.now();
+      function frame(now) {
+        var k = Math.min(1, (now - t0) / IRIS_MS);
+        var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        var r = fromR + (toR - fromR) * e;
+        iris.style.setProperty("--r", r.toFixed(2) + "px");
+        iris.style.setProperty("--spin", (e * 32).toFixed(2) + "deg");
+        if (k < 1) requestAnimationFrame(frame);
+        else {
+          if (toR > fromR) iris.classList.remove("is-active");
+          resolve();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+  function irisClose() { return runIris(irisRadius(), 0); }
+  function irisOpen() { return runIris(0, irisRadius()); }
+
+  function enterBasin() {
+    if (entered) return;
+    entered = true;
+    fadeInBgm();
+    irisClose().then(function () {
+      setScreen("vn");
+      sceneIndex = 0;
+      loadScene(0, { deferType: true });
+      return irisOpen();
+    }).then(function () {
+      if (sceneIndex === 0 && typer.paused) resumeTyping();
+    });
+  }
+
+  function loadScene(index, options) {
+    var scene = DATA.vn[index];
+    if (!scene) return;
+    var src = ASSET_CONFIG.backgrounds[index] || "";
+    var layers = [layerA, layerB];
+    var incoming = layers[1 - bgToggle];
+    var outgoing = layers[bgToggle];
+    assignImage(incoming.querySelector("img"), src, scene.alt || "");
+    incoming.classList.add("is-front");
+    outgoing.classList.remove("is-front");
+    bgToggle = 1 - bgToggle;
+    vnSpeaker.textContent = scene.speaker || "";
+    vnCount.textContent = pad(index + 1) + " / " + pad(DATA.vn.length);
+    vnFill.style.width = ((index + 1) / DATA.vn.length * 100) + "%";
+    if (!options || !options.deferType) startType(scene.text || "");
+    else {
+      clearTimeout(typer.timer);
+      typer.text = scene.text || "";
+      typer.i = 0;
+      typer.done = false;
+      typer.paused = true;
+      vnText.classList.remove("is-done");
+      vnText.textContent = "";
+    }
+  }
+
+  function startType(text) {
+    clearTimeout(typer.timer);
+    typer.text = text;
+    typer.i = 0;
+    typer.done = false;
+    typer.paused = false;
+    vnText.classList.remove("is-done");
+    vnText.textContent = "";
+    typeStep();
+  }
+  function typeStep() {
+    if (typer.paused) return;
+    if (typer.i >= typer.text.length) {
+      typer.done = true;
+      vnText.classList.add("is-done");
+      return;
+    }
+    var span = document.createElement("span");
+    span.className = "ch";
+    span.textContent = typer.text.charAt(typer.i);
+    vnText.appendChild(span);
+    typer.i += 1;
+    var ch = typer.text.charAt(typer.i - 1);
+    var delay = 28;
+    if (ch === " ") delay = 12;
+    else if (ch === "." || ch === "," || ch === "…" || ch === "?" || ch === "!") delay = 90;
+    typer.timer = setTimeout(typeStep, delay);
+  }
+  function finishType() {
+    clearTimeout(typer.timer);
+    typer.i = typer.text.length;
+    typer.done = true;
+    typer.paused = false;
+    vnText.textContent = typer.text;
+    vnText.classList.add("is-done");
+  }
+  function pauseTyping() {
+    clearTimeout(typer.timer);
+    if (!typer.done) typer.paused = true;
+  }
+  function resumeTyping() {
+    if (typer.done || !typer.paused) return;
+    typer.paused = false;
+    typeStep();
+  }
+  function nextScene() {
+    if (sceneLock || arriving) return;
+    sceneLock = true;
+    setTimeout(function () { sceneLock = false; }, reduceMotion ? 1 : 260);
+    if (sceneIndex >= DATA.vn.length - 1) {
+      arriveHub();
+      return;
+    }
+    sceneIndex += 1;
+    loadScene(sceneIndex);
+  }
+
+  function arriveHub() {
+    if (arriving) return;
+    arriving = true;
+    clearTimeout(typer.timer);
+    setOpen(modal, false);
+    veil.classList.add("is-on");
+    setTimeout(function () {
+      setScreen("hub");
+      logoFx.classList.add("is-on");
+      setTimeout(function () {
+        logoFx.classList.remove("is-on");
+        veil.classList.remove("is-on");
+        arriving = false;
+      }, reduceMotion ? 20 : 980);
+    }, reduceMotion ? 10 : 280);
+  }
+
+  function openSkip() {
+    if (arriving || stage.getAttribute("data-screen") !== "vn") return;
+    heldByModal = !audio.paused;
+    if (heldByModal) audio.pause();
+    syncAudioIcon();
+    pauseTyping();
+    setOpen(modal, true);
+    byId("skip-cancel").focus({ preventScroll: true });
+  }
+  function onSkipChoice(skip) {
+    setOpen(modal, false);
+    resumeHeld();
+    if (skip) arriveHub();
+    else resumeTyping();
+  }
+
+  function applyClimate(next, animate) {
+    var meta = DATA.climate[next] || DATA.climate.wet;
+    stage.setAttribute("data-climate", next);
+    climateRead.textContent = meta.latin + "  ·  " + meta.reading;
+    leverNote.textContent = meta.note || "";
+    var dry = next === "dry";
+    leverBtn.setAttribute("aria-pressed", dry ? "true" : "false");
+    leverBtn.setAttribute("aria-label", dry ? "DRY에서 WET로 전환" : "WET에서 DRY로 전환");
+    climateLive.textContent = (dry ? "DRY" : "WET") + " 모드";
+    if (animate) {
+      leverMech.classList.remove("is-clack");
+      void leverMech.offsetWidth;
+      leverMech.classList.add("is-clack");
+    }
+    renderRoster();
+  }
+
+  function renderRoster() {
+    var climate = stage.getAttribute("data-climate") === "dry" ? "dry" : "wet";
+    var keys = DATA.rosters[climate] || [];
+    dossierList.innerHTML = keys.map(function (key, index) {
+      var c = DATA.characters[key];
+      if (!c) return "";
+      var assets = ASSET_CONFIG.characters[key] || {};
+      var grade = gradeOf(c.pulse);
+      return (
+        '<article class="card" data-key="' + escapeHtml(key) + '" tabindex="0" role="button" aria-label="' + escapeHtml(c.name) + '">' +
+          '<div class="portrait-slot"><img class="portrait" alt="' + escapeHtml(c.name) + '" data-src="' + escapeHtml(assets.portrait || "") + '"></div>' +
+          '<div class="card-body">' +
+            '<span class="card-no caps">' + pad(index + 1) + "  /  " + escapeHtml(climate.toUpperCase()) + "</span>" +
+            '<h3 class="card-name">' + escapeHtml(c.name) + "</h3>" +
+            '<p class="card-alias alias">' + escapeHtml(c.alias) + "</p>" +
+            '<div class="card-pulse"><span class="caps">PULSE ' + escapeHtml(grade.roman) + "</span>" + ticksHtml(c.pulse) + "</div>" +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+    dossierList.querySelectorAll("img[data-src]").forEach(function (img) {
+      assignImage(img, img.getAttribute("data-src"), img.alt);
+    });
+  }
+
+  function specRow(label, value) {
+    return "<div><dt>" + escapeHtml(label) + "</dt><dd>" + escapeHtml(value || "—") + "</dd></div>";
+  }
+
+  function openDossier(key) {
+    var c = DATA.characters[key];
+    var assets = ASSET_CONFIG.characters[key] || {};
+    if (!c) return;
+    var grade = gradeOf(c.pulse);
+    var rumor = (c.rumor || []).map(function (paragraph) {
+      return "<p>" + escapeHtml(paragraph) + "</p>";
+    }).join("");
+    sheetBody.innerHTML =
+      '<div class="editorial">' +
+        '<div class="standing-slot"><img class="standing" alt="' + escapeHtml(c.name) + '"></div>' +
+        '<div class="ed-caption">' +
+          '<span class="caps">' + escapeHtml(String(c.faction || "").toUpperCase()) + " · " + escapeHtml(grade.roman) + "</span>" +
+          '<h2 class="ed-name">' + escapeHtml(c.name) + "</h2>" +
+          '<p class="ed-alias alias">' + escapeHtml(c.alias) + "</p>" +
+        "</div>" +
+        '<button type="button" class="stamp" aria-label="인장 스티커">' +
+          '<span class="stamp-photo"><img class="sticker" alt="' + escapeHtml(c.name) + '"></span>' +
+          '<span class="bubble">' + escapeHtml(c.stickerLine || "") + "</span>" +
+        "</button>" +
+      "</div>" +
+      '<div class="identity">' +
+        '<div class="face-switch" data-show="official" role="group" aria-label="기록 면">' +
+          '<button type="button" data-face="official" aria-pressed="true">제국 공식 신원서</button>' +
+          '<button type="button" data-face="rumor" aria-pressed="false">뒷골목 찌라시</button>' +
+          '<span class="face-bar" aria-hidden="true"></span>' +
+        "</div>" +
+        '<div class="faces" data-show="official">' +
+          '<div class="face face-official">' +
+            '<dl class="spec">' +
+              specRow("성명", c.name) +
+              specRow("이명", c.alias) +
+              specRow("종족", c.species) +
+              '<div><dt>PULSE</dt><dd><span class="spec-grade caps">' + escapeHtml(grade.roman + " · " + grade.name) + "</span> " + ticksHtml(c.pulse) + "</dd></div>" +
+              specRow("소속", c.affiliation) +
+            "</dl>" +
+            '<blockquote class="quote">' + escapeHtml(c.quote || "") + "</blockquote>" +
+          "</div>" +
+          '<div class="face face-rumor"><p class="caps rumor-kicker">Unofficial · 유통 금지</p>' + rumor + "</div>" +
+        "</div>" +
+      "</div>";
+    assignImage(sheetBody.querySelector(".standing"), assets.standing, c.name);
+    assignImage(sheetBody.querySelector(".sticker"), assets.sticker, c.name);
+    sheetBody.scrollTop = 0;
+    setOpen(sheet, true);
+    stage.setAttribute("data-sheet", "open");
+    stage.scrollTop = 0;
+    sheetClose.focus({ preventScroll: true });
+    requestAnimationFrame(function () {
+      stage.scrollTop = 0;
+      sheetBody.scrollTop = 0;
+    });
+  }
+
+  function closeSheet() {
+    setOpen(sheet, false);
+    stage.removeAttribute("data-sheet");
+  }
+
+  function setFace(face) {
+    var faces = sheetBody.querySelector(".faces");
+    var sw = sheetBody.querySelector(".face-switch");
+    if (faces) faces.setAttribute("data-show", face);
+    if (sw) sw.setAttribute("data-show", face);
+    sheetBody.querySelectorAll("[data-face]").forEach(function (button) {
+      button.setAttribute("aria-pressed", button.getAttribute("data-face") === face ? "true" : "false");
+    });
+  }
+
+  function bounceStamp(stamp) {
+    var bubble = stamp.querySelector(".bubble");
+    stamp.classList.remove("is-boing");
+    void stamp.offsetWidth;
+    stamp.classList.add("is-boing");
+    if (bubble) bubble.classList.add("is-on");
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(function () {
+      if (bubble) bubble.classList.remove("is-on");
+    }, 2600);
+  }
+
+  function setTab(name) {
+    var dossier = name !== "archive";
+    byId("tab-dossier").setAttribute("aria-selected", dossier ? "true" : "false");
+    byId("tab-archive").setAttribute("aria-selected", dossier ? "false" : "true");
+    byId("view-dossier").classList.toggle("is-on", dossier);
+    byId("view-archive").classList.toggle("is-on", !dossier);
+    byId("view-archive").hidden = dossier;
+    tabs.setAttribute("data-tab", dossier ? "dossier" : "archive");
+    if (!dossier) closeSheet();
+  }
+
+  function renderArchive() {
+    byId("archive-lead").textContent = (DATA.ui && DATA.ui.archiveLead) || "";
+    archiveMount.innerHTML = (DATA.archive || []).map(function (sec, index) {
+      var body = "";
+      (sec.paragraphs || []).forEach(function (paragraph) {
+        body += "<p>" + escapeHtml(paragraph) + "</p>";
+      });
+      if (sec.gradeTable) {
+        body += '<ol class="grade-list">';
+        var n;
+        for (n = 1; n <= 9; n += 1) {
+          var grade = gradeOf(n);
+          body += "<li><span>" + escapeHtml(grade.roman) + "</span><span>" + escapeHtml(grade.name) + "</span><em>" + escapeHtml(grade.en) + "</em></li>";
+        }
+        body += "</ol>";
+      }
+      if (sec.entries && sec.entries.length) {
+        body += '<dl class="lex">';
+        sec.entries.forEach(function (entry) {
+          body += "<dt>" + escapeHtml(entry.term) + "</dt><dd>" + escapeHtml(entry.def) + "</dd>";
+        });
+        body += "</dl>";
+      }
+      var open = index === 0;
+      return (
+        '<section class="acc' + (open ? " is-open" : "") + '">' +
+          '<button type="button" class="acc-head" aria-expanded="' + (open ? "true" : "false") + '">' +
+            '<span class="acc-no">' + escapeHtml(sec.no || pad(index + 1)) + "</span>" +
+            "<span><b>" + escapeHtml(sec.title || "") + "</b><small>" + escapeHtml(sec.kicker || "") + "</small></span>" +
+            '<span class="acc-mark" aria-hidden="true"></span>' +
+          "</button>" +
+          '<div class="acc-body"><div class="acc-inner">' + body + "</div></div>" +
+        "</section>"
+      );
+    }).join("");
+  }
+
+  function freshQuiz() {
+    var affinity = {};
+    rosterKeys().forEach(function (key) { affinity[key] = 0; });
+    return { index: 0, wet: 0, dry: 0, pulse: 0, affinity: affinity, started: false, finished: false, locked: false };
+  }
+
+  function currentPulse() {
+    var base = (DATA.quizMeta && DATA.quizMeta.basePulse) || 4;
+    return clamp(base + quiz.pulse, 1, 9);
+  }
+
+  function updateGaugeReadout() {
+    var pulseValue = currentPulse();
+    var grade = gradeOf(pulseValue);
+    var circ = 88;
+    pulseRing.style.strokeDashoffset = String(circ * (1 - pulseValue / 9));
+    pulseRing.style.stroke = quiz.dry > quiz.wet ? "#B86F28" : "#1E4D54";
+    pulseReadout.textContent = "W " + pad(quiz.wet) + "    D " + pad(quiz.dry) + "    PULSE " + grade.roman;
+  }
+
+  function startGaugeLoop() {
+    stopGaugeLoop();
+    function frame(t) {
+      var pulseValue = currentPulse();
+      var sum = quiz.wet + quiz.dry;
+      var balance = sum === 0 ? 0 : (quiz.dry - quiz.wet) / sum;
+      var tremor = reduceMotion ? 0 : (pulseValue / 9) * 1.7 * Math.sin(t / 78);
+      var angle = balance * 72 + tremor;
+      gaugeNeedle.setAttribute("transform", "rotate(" + angle.toFixed(2) + " 120 118)");
+      gaugeRaf = requestAnimationFrame(frame);
+    }
+    gaugeRaf = requestAnimationFrame(frame);
+  }
+  function stopGaugeLoop() {
+    if (gaugeRaf) cancelAnimationFrame(gaugeRaf);
+    gaugeRaf = 0;
+  }
+
+  function renderQuestion() {
+    var item = DATA.quiz[quiz.index];
+    if (!item) { renderResult(); return; }
+    var total = DATA.quiz.length;
+    var choices = (item.choices || []).map(function (choice, index) {
+      return (
+        '<button type="button" class="choice" data-choice="' + index + '">' +
+          '<span class="choice-idx">' + pad(index + 1) + "</span>" +
+          "<span>" + escapeHtml(choice.label) + "</span>" +
+        "</button>"
+      );
+    }).join("");
+    pulseBody.innerHTML =
+      '<p class="caps q-kicker">' + pad(quiz.index + 1) + " / " + pad(total) + "</p>" +
+      '<h2 class="q-prompt">' + escapeHtml(item.prompt) + "</h2>" +
+      '<div class="q-choices">' + choices + "</div>";
+    updateGaugeReadout();
+  }
+
+  function choose(index) {
+    if (quiz.locked || quiz.finished) return;
+    var item = DATA.quiz[quiz.index];
+    if (!item || !item.choices || !item.choices[index]) return;
+    quiz.locked = true;
+    var choice = item.choices[index];
+    quiz.wet += choice.wet || 0;
+    quiz.dry += choice.dry || 0;
+    quiz.pulse += choice.pulse || 0;
+    Object.keys(choice.affinity || {}).forEach(function (key) {
+      quiz.affinity[key] = (quiz.affinity[key] || 0) + choice.affinity[key];
+    });
+    var button = pulseBody.querySelector('[data-choice="' + index + '"]');
+    if (button) button.classList.add("is-picked");
+    updateGaugeReadout();
+    setTimeout(function () {
+      quiz.locked = false;
+      quiz.index += 1;
+      if (quiz.index >= DATA.quiz.length) renderResult();
+      else renderQuestion();
+    }, reduceMotion ? 20 : 420);
+  }
+
+  function computeResult() {
+    var pulseValue = currentPulse();
+    var tieAt = (DATA.quizMeta && DATA.quizMeta.tiePulseAtLeast) || 5;
+    var faction;
+    if (quiz.wet === quiz.dry) faction = pulseValue >= tieAt ? "dry" : "wet";
+    else faction = quiz.wet > quiz.dry ? "wet" : "dry";
+    var bestKey = rosterKeys()[0];
+    var bestScore = -1e9;
+    rosterKeys().forEach(function (key) {
+      var character = DATA.characters[key];
+      if (!character) return;
+      var score = quiz.affinity[key] || 0;
+      if (character.faction === faction) score += 0.2;
+      if (score > bestScore) {
+        bestScore = score;
+        bestKey = key;
+      }
+    });
+    var band = pulseValue <= 3 ? "low" : (pulseValue <= 6 ? "mid" : "high");
+    var trait = (DATA.traits[faction] && DATA.traits[faction][band]) || "";
+    return {
+      faction: faction,
+      pulse: pulseValue,
+      grade: gradeOf(pulseValue),
+      npc: DATA.characters[bestKey],
+      trait: trait
+    };
+  }
+
+  function resultLine(result) {
+    var factionText = result.faction === "wet" ? "WET" : "DRY";
+    var pulseText = result.grade.roman + " · " + result.grade.name;
+    return "[종족 성향: " + factionText + " / PULSE 등급: " + pulseText + " / 특징: " + result.trait + " / 초기 인연 추천: " + (result.npc ? result.npc.name : "") + "]";
+  }
+
+  function renderResult() {
+    quiz.finished = true;
+    var result = computeResult();
+    lastResult = result;
+    var imageKind = (DATA.quizMeta && DATA.quizMeta.resultImage) || "portrait";
+    if (imageKind !== "portrait" && imageKind !== "sticker") imageKind = "portrait";
+    var assets = (result.npc && ASSET_CONFIG.characters[result.npc.key]) || {};
+    var factionText = result.faction === "wet" ? "WET · 습성" : "DRY · 건성";
+    var line = resultLine(result);
+    pulseBody.innerHTML =
+      '<article class="cert" id="cert">' +
+        '<svg class="seal" viewBox="0 0 120 120" aria-hidden="true">' +
+          "<defs><path id=\"sealRing\" d=\"M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0\"/></defs>" +
+          '<circle cx="60" cy="60" r="52" fill="none" stroke="#8C764C" stroke-width="1"/>' +
+          '<circle cx="60" cy="60" r="40" fill="none" stroke="#8C764C" stroke-width="0.5"/>' +
+          '<text fill="#8C764C" font-size="7" font-family="Cinzel, serif" letter-spacing="1.6"><textPath href="#sealRing">IMPERIAL ASSAY · VEL-ARCA · </textPath></text>' +
+          '<text x="60" y="64" text-anchor="middle" fill="#8C764C" font-size="11" font-family="Cinzel, serif">PULSE</text>' +
+        "</svg>" +
+        '<p class="caps cert-kicker">Imperial Assay</p>' +
+        "<h2>간이 신원 감정서</h2>" +
+        '<p class="latin">Field impression, not a decree.</p>' +
+        '<div class="cert-photo"><img id="result-img" alt=""></div>' +
+        '<div class="cert-npc"><p class="alias">' + escapeHtml(result.npc ? result.npc.alias : "") + '</p><h3>' + escapeHtml(result.npc ? result.npc.name : "") + "</h3></div>" +
+        '<dl class="spec">' +
+          specRow("종족 성향", factionText) +
+          specRow("PULSE 등급", result.grade.roman + " · " + result.grade.name) +
+          specRow("초기 인연", result.npc ? result.npc.name : "") +
+        "</dl>" +
+        '<p class="trait">' + escapeHtml(result.trait) + "</p>" +
+        '<p class="copy-preview">' + escapeHtml(line) + "</p>" +
+        '<div class="cert-actions">' +
+          '<button type="button" class="text-btn" id="copy-persona">크랙 페르소나용 한 줄 복사</button>' +
+          '<button type="button" class="text-btn ghost" id="retry-quiz">다시 측정하기</button>' +
+        "</div>" +
+      "</article>";
+    assignImage(byId("result-img"), assets[imageKind] || assets.portrait, result.npc ? result.npc.name : "");
+    updateGaugeReadout();
+    requestAnimationFrame(function () {
+      var cert = byId("cert");
+      if (cert) cert.classList.add("is-in");
+    });
+  }
+
+  function fallbackCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.left = "-9999px";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+    area.remove();
+    return ok;
+  }
+
+  function copyPersona() {
+    if (!lastResult) return;
+    var line = resultLine(lastResult);
+    var done = function (ok) {
+      if (ok) showToast("복사 완료. 크랙 페르소나에 붙여넣으세요.");
+      else showToast("복사에 실패했습니다. 감정서의 문장을 길게 눌러 선택하세요.");
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(line).then(function () { done(true); }, function () { done(fallbackCopy(line)); });
+    } else {
+      done(fallbackCopy(line));
+    }
+  }
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("is-on"); }, 2800);
+  }
+
+  function resetQuiz() {
+    quiz = freshQuiz();
+    quiz.started = true;
+    renderQuestion();
+    var panel = pulse.querySelector(".pulse-panel");
+    if (panel) panel.scrollTop = 0;
+  }
+
+  function openPulse() {
+    savedScroll = hubScroll.scrollTop;
+    if (!quiz.started) resetQuiz();
+    else if (quiz.finished) renderResult();
+    else renderQuestion();
+    setOpen(pulse, true);
+    stage.setAttribute("data-pulse", "open");
+    startGaugeLoop();
+    stage.scrollTop = 0;
+    var panel = pulse.querySelector(".pulse-panel");
+    if (panel) panel.scrollTop = 0;
+    pulseClose.focus({ preventScroll: true });
+  }
+  function closePulse() {
+    setOpen(pulse, false);
+    stage.removeAttribute("data-pulse");
+    stopGaugeLoop();
+    hubScroll.scrollTop = savedScroll;
+  }
+
+  function bind() {
+    audioBtn.addEventListener("click", toggleAudio);
+    audio.addEventListener("play", syncAudioIcon);
+    audio.addEventListener("pause", syncAudioIcon);
+    byId("enter-btn").addEventListener("click", enterBasin);
+    byId("skip-btn").addEventListener("click", function (event) {
+      event.stopPropagation();
+      openSkip();
+    });
+    byId("skip-confirm").addEventListener("click", function () { onSkipChoice(true); });
+    byId("skip-cancel").addEventListener("click", function () { onSkipChoice(false); });
+    byId("skip-dim").addEventListener("click", function () { onSkipChoice(false); });
+    byId("screen-vn").addEventListener("click", function (event) {
+      if (event.target.closest("button, a, .modal")) return;
+      if (modal.classList.contains("is-open") || arriving) return;
+      if (!typer.done) finishType();
+      else nextScene();
+    });
+    leverBtn.addEventListener("click", function () {
+      var next = stage.getAttribute("data-climate") === "dry" ? "wet" : "dry";
+      applyClimate(next, true);
+    });
+    byId("tab-dossier").addEventListener("click", function () { setTab("dossier"); });
+    byId("tab-archive").addEventListener("click", function () { setTab("archive"); });
+    dossierList.addEventListener("click", function (event) {
+      var card = event.target.closest(".card");
+      if (!card) return;
+      openDossier(card.getAttribute("data-key"));
+    });
+    dossierList.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      var card = event.target.closest(".card");
+      if (!card) return;
+      event.preventDefault();
+      openDossier(card.getAttribute("data-key"));
+    });
+    dossierList.addEventListener("pointerdown", function (event) {
+      var card = event.target.closest(".card");
+      if (card) card.classList.add("is-awake");
+    });
+    dossierList.addEventListener("pointerup", function () {
+      dossierList.querySelectorAll(".is-awake").forEach(function (card) { card.classList.remove("is-awake"); });
+    });
+    dossierList.addEventListener("pointercancel", function () {
+      dossierList.querySelectorAll(".is-awake").forEach(function (card) { card.classList.remove("is-awake"); });
+    });
+    sheetClose.addEventListener("click", closeSheet);
+    sheet.addEventListener("click", function (event) {
+      var face = event.target.closest("[data-face]");
+      if (face) { setFace(face.getAttribute("data-face")); return; }
+      var stamp = event.target.closest(".stamp");
+      if (stamp) bounceStamp(stamp);
+    });
+    archiveMount.addEventListener("click", function (event) {
+      var head = event.target.closest(".acc-head");
+      if (!head) return;
+      var acc = head.parentNode;
+      var open = acc.classList.toggle("is-open");
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    byId("fab").addEventListener("click", openPulse);
+    byId("open-pulse-banner").addEventListener("click", openPulse);
+    pulseClose.addEventListener("click", closePulse);
+    pulseDim.addEventListener("click", closePulse);
+    pulseBody.addEventListener("click", function (event) {
+      if (event.target.closest("#copy-persona")) { copyPersona(); return; }
+      if (event.target.closest("#retry-quiz")) { resetQuiz(); return; }
+      var choice = event.target.closest("[data-choice]");
+      if (choice) choose(Number(choice.getAttribute("data-choice")));
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") return;
+      if (modal.classList.contains("is-open")) { onSkipChoice(false); return; }
+      if (pulse.classList.contains("is-open")) { closePulse(); return; }
+      if (sheet.classList.contains("is-open")) closeSheet();
+    });
+  }
+
+  function init() {
+    buildReticle();
+    buildGaugeTicks();
+    buildParticles();
+    assignImage(byId("logo-img"), ASSET_CONFIG.logo, "WET AND DRY");
+    assignImage(byId("logo-fx-img"), ASSET_CONFIG.logo, "");
+    assignImage(byId("land-bg-img"), ASSET_CONFIG.backgrounds[0], (DATA.vn[0] && DATA.vn[0].alt) || "");
+    assignImage(
+      byId("archive-banner-img"),
+      ASSET_CONFIG.archiveBanner,
+      (DATA.ui && DATA.ui.archiveBannerAlt) || ""
+    );
+    applyClimate("wet", false);
+    renderArchive();
+    bind();
+    preload();
+    syncAudioIcon();
+    updateGaugeReadout();
+    setScreen("landing");
+    stage.addEventListener("scroll", function () {
+      if (stage.scrollTop !== 0 || stage.scrollLeft !== 0) {
+        stage.scrollTop = 0;
+        stage.scrollLeft = 0;
+      }
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
