@@ -949,8 +949,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: calc(46px + var(--safe-t));
-    padding: calc(8px + var(--safe-t)) 52px 8px;
+    min-height: calc(58px + var(--safe-t));
+    padding: calc(12px + var(--safe-t)) 58px 10px;
     background: #0A0C0E;
     border-bottom: 1px solid rgba(140, 118, 76, 0.35);
     font-family: var(--caps);
@@ -958,15 +958,41 @@
     font-size: 10px;
     color: var(--brass);
   }
-  .sheet-close {
+  #sheet-close {
     position: absolute;
-    left: 4px;
-    top: calc(6px + var(--safe-t));
-    width: 44px;
-    height: 36px;
+    z-index: 3;
+    left: 8px;
+    top: calc(8px + var(--safe-t));
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
     font-family: var(--caps);
-    font-size: 18px;
-    color: var(--ink);
+    font-size: 32px;
+    line-height: 1;
+    color: #E9FFFC;
+    text-shadow:
+      0 0 6px rgba(150, 255, 244, 0.95),
+      0 0 14px rgba(70, 220, 210, 0.72);
+  }
+  #sheet-close::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(130, 245, 232, 0.72) 0%, rgba(30, 160, 150, 0.28) 42%, rgba(30, 77, 84, 0) 72%);
+    filter: blur(7px);
+    pointer-events: none;
+  }
+  #stage[data-climate="dry"] #sheet-close {
+    color: #FFF1E4;
+    text-shadow:
+      0 0 6px rgba(255, 186, 110, 0.95),
+      0 0 14px rgba(220, 110, 40, 0.7);
+  }
+  #stage[data-climate="dry"] #sheet-close::before {
+    background: radial-gradient(circle, rgba(255, 176, 90, 0.7) 0%, rgba(184, 92, 32, 0.28) 42%, rgba(143, 67, 41, 0) 72%);
   }
   .sheet-body {
     flex: 1;
@@ -1061,7 +1087,15 @@
     pointer-events: none;
     clip-path: var(--chamfer-sm);
   }
-  .bubble.is-on { opacity: 1; transform: none; transition: 0.22s ease; }
+  .bubble.is-on {
+    opacity: 1;
+    left: calc(100% - 36px);
+    width: 224px;
+    transform: none;
+    transition: 0.22s ease;
+  }
+  .bubble-en, .bubble-ko { display: block; }
+  .bubble-ko { margin-top: 4px; font-style: italic; }
 
   .identity { position: relative; z-index: 2; padding: 4px 16px calc(108px + var(--safe-b)); }
   .face-switch {
@@ -1763,7 +1797,7 @@
               <div class="lever-ruler" aria-hidden="true"></div>
               <div class="lever-stage">
                 <div class="scale-pan scale-wet" aria-hidden="true">
-                  <svg class="scale-svg" viewBox="0 0 160 112">
+                  <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="wetMetal" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0" stop-color="#6A7278"/>
@@ -1783,8 +1817,8 @@
                         <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.9"/>
                         <stop offset="1" stop-color="#F7FAFB" stop-opacity="0"/>
                       </linearGradient>
-                      <clipPath id="wetPanClip">
-                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      <clipPath id="wetWeightClip">
+                        <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z"/>
                       </clipPath>
                       <filter id="wetGrain" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
                         <feTurbulence type="fractalNoise" baseFrequency="0.025 0.95" numOctaves="2" seed="4" stitchTiles="stitch" result="brush"/>
@@ -1804,33 +1838,23 @@
                         <feBlend in="SourceGraphic" in2="veil" mode="soft-light"/>
                       </filter>
                     </defs>
-                    <g fill="none" stroke="#A7B0B6" stroke-width="0.7" stroke-linecap="square">
-                      <circle cx="80" cy="6" r="2.4"/>
-                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    <g class="scale-bow" fill="none" stroke="#C5CCD1" stroke-width="0.85" opacity="0.34">
+                      <circle cx="80" cy="14" r="2.15"/>
+                      <path d="M80 16.2 V31"/>
+                      <path d="M64 44 A 16 13 0 0 0 96 44"/>
                     </g>
-                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#0C0E10"/>
-                    <g clip-path="url(#wetPanClip)">
-                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#wetMetal)" filter="url(#wetGrain)"/>
-                      <rect class="silver-sheen" x="8" y="52" width="22" height="46" fill="url(#wetSheen)"/>
-                      <path d="M28 90 Q80 100 132 90" stroke="#1E4D54" stroke-width="1.1" fill="none" opacity="0.7"/>
-                      <g fill="#D5DCE0">
-                        <circle cx="36" cy="88" r="0.7" opacity="0.8"/>
-                        <circle cx="52" cy="92" r="0.9" opacity="0.55"/>
-                        <circle cx="108" cy="91" r="0.8" opacity="0.6"/>
-                        <circle cx="124" cy="86" r="0.6" opacity="0.75"/>
-                      </g>
+                    <path d="M68 47 H92 V57 L116 73 L122 107 H38 L44 73 L68 57 Z" fill="#0C0E10"/>
+                    <g clip-path="url(#wetWeightClip)">
+                      <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="url(#wetMetal)" filter="url(#wetGrain)"/>
+                      <rect class="silver-sheen" x="58" y="58" width="16" height="40" fill="url(#wetSheen)"/>
+                      <path d="M52 96 H108" stroke="#1E4D54" stroke-width="1" fill="none" opacity="0.65"/>
+                      <path d="M54 78 H106 M50 98 H110" fill="none" stroke="#5E686F" stroke-width="0.45" opacity="0.55"/>
                     </g>
-                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#C5CCD1" stroke-width="0.7"/>
-                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5E686F" stroke-width="0.45"/>
-                    <g stroke="#8E989F" stroke-width="0.6">
-                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
-                    </g>
-                    <circle cx="24" cy="66" r="1.3" fill="#C5CCD1"/>
-                    <circle cx="136" cy="66" r="1.3" fill="#C5CCD1"/>
-                    <g filter="url(#wetFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
-                      <text x="80.6" y="80.2" fill="#14181B" textLength="96" lengthAdjust="spacing">WET</text>
-                      <text x="80" y="79.2" fill="url(#wetType)" textLength="96" lengthAdjust="spacing">WET</text>
-                      <text x="80" y="79.2" fill="none" stroke="#F4F7F8" stroke-width="0.35" opacity="0.45" textLength="96" lengthAdjust="spacing">WET</text>
+                    <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="none" stroke="#C5CCD1" stroke-width="0.7"/>
+                    <g filter="url(#wetFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="18" font-weight="700">
+                      <text x="80.5" y="93.2" fill="#14181B" textLength="52" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="92.2" fill="url(#wetType)" textLength="52" lengthAdjust="spacing">WET</text>
+                      <text x="80" y="92.2" fill="none" stroke="#F4F7F8" stroke-width="0.3" opacity="0.4" textLength="52" lengthAdjust="spacing">WET</text>
                     </g>
                   </svg>
                 </div>
@@ -1839,7 +1863,7 @@
                   <span class="lever-pivot"></span>
                 </button>
                 <div class="scale-pan scale-dry" aria-hidden="true">
-                  <svg class="scale-svg" viewBox="0 0 160 112">
+                  <svg class="scale-svg" viewBox="0 0 160 118">
                     <defs>
                       <linearGradient id="dryMetal" x1="0" y1="0" x2="0.2" y2="1">
                         <stop offset="0" stop-color="#3E403E"/>
@@ -1855,8 +1879,8 @@
                         <stop offset="0.82" stop-color="#8F4329"/>
                         <stop offset="1" stop-color="#D8CBBA"/>
                       </linearGradient>
-                      <clipPath id="dryPanClip">
-                        <ellipse cx="80" cy="74" rx="63" ry="24"/>
+                      <clipPath id="dryWeightClip">
+                        <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z"/>
                       </clipPath>
                       <filter id="dryRust" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
                         <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="13" stitchTiles="stitch" result="pit"/>
@@ -1878,32 +1902,25 @@
                         <feBlend in="stained" in2="pits" mode="overlay"/>
                       </filter>
                     </defs>
-                    <g fill="none" stroke="#8A8176" stroke-width="0.7" stroke-linecap="square">
-                      <circle cx="80" cy="6" r="2.4"/>
-                      <path d="M80 8.4 V15 M58 15 H102 M63 15 L24 46 M97 15 L136 46"/>
+                    <g class="scale-bow" fill="none" stroke="#8A8176" stroke-width="0.85" opacity="0.34">
+                      <circle cx="80" cy="14" r="2.15"/>
+                      <path d="M80 16.2 V31"/>
+                      <path d="M66 18 L70 22 M94 18 L90 22" stroke="#8F4329" stroke-width="0.55"/>
+                      <path d="M64 44 A 16 13 0 0 0 96 44"/>
                     </g>
-                    <path d="M66 12 L70 16 M96 11 L92 16" stroke="#8F4329" stroke-width="0.6" fill="none"/>
-                    <ellipse cx="80" cy="80" rx="63" ry="22" fill="#100C0A"/>
-                    <g clip-path="url(#dryPanClip)">
-                      <ellipse cx="80" cy="74" rx="63" ry="24" fill="url(#dryMetal)" filter="url(#dryRust)"/>
-                      <path d="M30 88 Q58 98 86 90 Q112 84 134 92" fill="none" stroke="#8F4329" stroke-width="1.4" opacity="0.8"/>
-                      <path d="M34 68 L46 76 L41 83" fill="none" stroke="#3A241C" stroke-width="0.55"/>
-                      <path d="M122 64 L130 74 L124 79" fill="none" stroke="#6A3424" stroke-width="0.5"/>
-                      <ellipse cx="48" cy="90" rx="13" ry="4.2" fill="#8F4329" opacity="0.42"/>
-                      <ellipse cx="112" cy="84" rx="8" ry="3.2" fill="#B86F28" opacity="0.32"/>
-                      <ellipse cx="78" cy="93" rx="5" ry="2" fill="#5A2618" opacity="0.55"/>
+                    <path d="M68 47 H92 V57 L116 73 L122 107 H38 L44 73 L68 57 Z" fill="#100C0A"/>
+                    <g clip-path="url(#dryWeightClip)">
+                      <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="url(#dryMetal)" filter="url(#dryRust)"/>
+                      <path d="M50 98 H112" stroke="#8F4329" stroke-width="1.3" fill="none" opacity="0.75"/>
+                      <path d="M48 72 L58 80 L54 86" fill="none" stroke="#3A241C" stroke-width="0.5"/>
+                      <path d="M108 74 L116 84" fill="none" stroke="#6A3424" stroke-width="0.5"/>
+                      <path d="M54 78 H106 M50 98 H110" fill="none" stroke="#5C4636" stroke-width="0.45" opacity="0.6"/>
                     </g>
-                    <ellipse cx="80" cy="74" rx="63" ry="24" fill="none" stroke="#A39888" stroke-width="0.7"/>
-                    <path d="M30 88 Q80 99 130 88" fill="none" stroke="#5C4636" stroke-width="0.45"/>
-                    <g stroke="#8C764C" stroke-width="0.55" opacity="0.85">
-                      <path d="M80 50.5 V54.5 M62 52.2 V55.2 M98 52.2 V55.2 M46 56.5 V58.8 M114 56.5 V58.8"/>
-                    </g>
-                    <circle cx="24" cy="66" r="1.3" fill="#8A8176"/>
-                    <circle cx="136" cy="66" r="1.3" fill="#B86F28"/>
-                    <g filter="url(#dryFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="27" font-weight="700">
-                      <text x="80.7" y="80.4" fill="#1A100C" textLength="96" lengthAdjust="spacing">DRY</text>
-                      <text x="80" y="79.2" fill="url(#dryType)" textLength="96" lengthAdjust="spacing">DRY</text>
-                      <text x="80" y="79.2" fill="none" stroke="#E4DDD2" stroke-width="0.3" opacity="0.28" textLength="96" lengthAdjust="spacing">DRY</text>
+                    <path d="M68 44 H92 V54 L116 70 L122 104 H38 L44 70 L68 54 Z" fill="none" stroke="#A39888" stroke-width="0.7"/>
+                    <g filter="url(#dryFace)" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="18" font-weight="700">
+                      <text x="80.5" y="93.4" fill="#1A100C" textLength="52" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="92.2" fill="url(#dryType)" textLength="52" lengthAdjust="spacing">DRY</text>
+                      <text x="80" y="92.2" fill="none" stroke="#E4DDD2" stroke-width="0.28" opacity="0.25" textLength="52" lengthAdjust="spacing">DRY</text>
                     </g>
                   </svg>
                 </div>
@@ -2183,7 +2200,10 @@ var DATA = {
         "서큐버스라는 간판이 무색하게 사랑과 쾌락을 오직 교감신경과 혈류 수치로만 난도질하는 지독한 이성주의자! 강의실에서 학생들의 지적 쾌감을 합법적으로 수확하며 우아하게 차를 마시지만, 정작 본인은 반세기째 실전 연애 기록이 백지라는 웃지 못할 뒷말이 돈다.",
         "음지에서 날개 돋친 듯 팔리는 익명의 19금 소설가 Dr. Velvet과 유독 깊은 인연이 있다는 찌라시가 파다한데, 우연인지 오른손에 묵직한 집필 굳은살이 박여 있다. 본인은 그저 학술적 교류일 뿐이라며 무테안경 너머로 건조한 태도를 취하더라. 목이 마를 때면 체면이고 뭐고 남의 손목부터 낚아챈다는 제보도 있지만, 일단은 모른 척하자."
       ],
-      stickerLine: "학술적 교류일 뿐이다."
+      stickerLines: [
+        { en: "Repeatedly poking a professor yields zero academic data. Cease immediately.", ko: "교수를 반복적으로 찌르는 행위는 학술적 데이터가 전무합니다. 즉시 중단하시죠." },
+        { en: "If you are checking my pulse, my wrist is lower. And no, I am not fluttering.", ko: "제 맥박을 잴 셈이라면 손목은 더 아래입니다. 그리고 전 설렘을 느끼고 있지 않습니다." }
+      ]
     },
     valeria: {
       key: "valeria",
@@ -2200,7 +2220,10 @@ var DATA = {
         "그런데 어째서인지 요즘 들어 붉은 모래톱 협곡 상공을 비정상적으로 낮게 순찰하는 날이 잦아졌다. 본인은 \"열상승기류 측량\"이라고 빳빳하게 잡아떼지만, 부하들 사이에선 대장님이 실은 바위 위에서 일광욕하는 도마뱀들에게 남다른 관심이 있다는 은밀한 소문이 돈다.",
         "아, 가끔 목이 바짝 마른 날엔 쇠 맛이 지겹다며 은근슬쩍 남의 손목을 징발하려 드니 주의하자!"
       ],
-      stickerLine: "열상승기류 측량이다."
+      stickerLines: [
+        { en: "Keep your fingers off my uniform. You are smudging the brass buttons.", ko: "제복에 손대지 말거라. 황동 단추에 지문이 묻지 않니." },
+        { en: "I was not staring at the canyon lizards. That is classified aerial reconnaissance.", ko: "협곡 도마뱀들을 훔쳐본 게 아니다. 그건 기밀 공중 정찰이야." }
+      ]
     },
     odile: {
       key: "odile",
@@ -2216,7 +2239,10 @@ var DATA = {
         "크로스로드 지하수로 깊숙한 곳에서 맞춤 의상실이자 무면허 외과 [O' Closets and Cares]를 운영한다. 그게 뭐든 간에 수선과 관계된 일 앞에서는 지독한 직업병의 소유자. 치수를 재러 갔다가 흉터까지 강제로 꿰매지고, 치료받으러 갔다가 옷매무새가 흉측하다며 잔소리를 듣는 기이한 경험을 할지도 모르니 안정제 준비는 필수.",
         "거미줄로 감쪽같이 상처를 봉합해 주는 솜씨는 가히 예술이지만, 어째 시술이나 가봉을 받고 나오면 묘하게 기운이 쏙 빠지고 온몸이 나른해진다는 후기가 많다. 본인은 그저 옷감이 상하지 않게 잠시 고정해 두었을 뿐이라며 네 개의 눈으로 상냥하게 웃지만, 탈의실 거미줄엔 웬만하면 묶이지 않는 게 상책이겠어!"
       ],
-      stickerLine: "잠시 고정해 두었을 뿐."
+      stickerLines: [
+        { en: "Oh my, your fingertip is trembling. Shall I stitch it still for you?", ko: "이런, 손끝이 떨리시네요. 가만히 계시게 살짝 꿰매 드릴까요?" },
+        { en: "Poking the tailor is bad manners, dear. Now hold still so I can measure your neck.", ko: "재단사를 콕콕 찌르는 건 무례하답니다. 자, 목둘레 잴 테니 가만히 계세요." }
+      ]
     },
     shezu: {
       key: "shezu",
@@ -2232,7 +2258,10 @@ var DATA = {
         "황혼지구를 주름잡는 서커스단의 단장이자 뒷골목 정보상. 입꼬리가 꿰매진 듯한 기묘한 미소를 달고, 대화를 마치 카드 마술처럼 제멋대로 주무르는 타고난 쇼맨이다.",
         "그녀와 거래할 땐 화려한 연극조 말투보다 발밑에서 제멋대로 춤추는 그림자를 더 조심해야… 늘 여유만만하게 남의 비밀을 캐고 다니지만, 화려한 조명과 관객의 시선이 꺼진 무대 뒤에선 뜻밖의 헛헛함에 시달린다는 소문이 돈다. 가끔 극도로 목이 마른 날엔 몸에서 까만 연기가 일렁이는 것처럼 보인다던데, 섀도우본의 특성일까? 저인구 종족이라 알 길이 없다."
       ],
-      stickerLine: "그림자를 더 조심해."
+      stickerLines: [
+        { en: "Careful, darling—poke too hard and your finger might pass right through the smoke.", ko: "조심해, 자기야. 너무 세게 찌르면 손가락이 연기 속으로 푹 빠질지도 몰라." },
+        { en: "Encore already? You really can't take your eyes off the ringmaster, can you?", ko: "벌써 앙코르야? 역시 단장님한테서 눈을 못 떼는구나?" }
+      ]
     },
     popori: {
       key: "popori",
@@ -2248,7 +2277,10 @@ var DATA = {
         "크로스로드 골목과 온실 일대를 떠도는 정체불명의 4차원 괴짜. 머리카락에 나뭇잎과 작은 버섯이 꽂혀 있어도 전혀 신경 쓰지 않으며, 초면인 사람에게도 진지한 눈빛으로 \"왜 지렁이로 안 변하고 인간으로 사느냐\"는 황당한 질문을 던진다.",
         "주머니 속 지렁이 병과 이끼를 보물처럼 아끼는 순수한 자연주의자지만, 현실이 제 망상만큼 낭만적이지 않다는 걸 깨닫는 순간 급격히 시무룩해져 화분 뒤에 숨어 묵언수행에 돌입하는 유리 멘탈. 가끔 대화가 기묘하게 길어지거나 본인이 지나치게 들뜨면 신체 윤곽이 묘하게 흐물거린다는 목격담이 있는데, 너무 깊이 캐묻다 보면 또 삐져 말을 안 걸 테니 적당히 장단만 맞춰주자."
       ],
-      stickerLine: "왜 지렁이로 안 변해?"
+      stickerLines: [
+        { en: "Hey, don't shake me! You're gonna make the worms in my pocket dizzy.", ko: "야, 흔들지 마! 주머니 속 지렁이들 멀미한단 말이야." },
+        { en: "You poked me without offering a mushroom. I'm hiding behind a flowerpot for now.", ko: "버섯도 안 주면서 찌르기만 했어. 나 화분 뒤에 숨을 거야." }
+      ]
     },
     aywin: {
       key: "aywin",
@@ -2264,7 +2296,10 @@ var DATA = {
         "포자대삼림 깊숙한 수력 공방에 틀어박혀 300년 넘게 거짓말 안 하는 돌멩이만 깎고 산 탓에, 사람 대하는 법을 아주 깨끗하게 까먹고 말았다! 공방에 손님이 찾아오면 일단 마법 함정부터 켜고, 문틈으로 고개를 내밀어 상대의 안목과 손재주를 원색적인 독설로 갈아버리는 게 기본 접객 매뉴얼. 입은 험해도 실력만큼은 제국 톱클래스라 울며 겨자 먹기로 찾아오는 의뢰인이 끊이질 않는다.",
         "평생 누구의 도움도 필요 없을 것처럼 굴지만, 한겨울에 손끝이 얼어붙어 작업이 멈출 때쯤이면 자존심이고 뭐고 뜨거운 코코아부터 애타게 찾는다는 소문이 있다. 해동되면 언제 그랬냐는 듯 욕하게 되니, 조수들만 눈뜬 장님인 척 애써야 하는 꼴이다."
       ],
-      stickerLine: "함정부터 켜 둔다."
+      stickerLines: [
+        { en: "Touch me one more time and I'm wiring a mana-trap to your screen.", ko: "한 번만 더 건드려 봐, 네 화면에 마법 함정 연결해 버릴 테니까." },
+        { en: "What? Unless you brought hot tea or decent mana-stones, piss off.", ko: "왜. 뜨거운 차나 쓸 만한 마정석 가져온 거 아니면 꺼져." }
+      ]
     },
     kuorath: {
       key: "kuorath",
@@ -2280,7 +2315,10 @@ var DATA = {
         "붉은 모래톱 협곡을 누비는 중량급 용병. 험악한 흉터와 산만 한 등판 때문에 길 잃은 여행자를 도우려 다가가기만 해도 상대가 기겁하며 칼부터 뽑는 비극적인 일상을 산다. 문제는 칼을 보면 본능이 먼저 반응해 상대를 **아주 부드럽게** 기절시킨 뒤 천막으로 데려와 극진히 간호한다는 점. 덕분에 협곡에는 \"죽은 줄 알고 눈 떴더니 거인이 울먹이며 붕대를 감아주더라\"는 기묘한 미담만 쌓여간다.",
         "마수를 반 토막 내는 양손도끼에 웬 앙증맞은 핑크 리본이 묶여 있지만 본인이 워낙 진지하게 아끼니 절대 웃지 마!"
       ],
-      stickerLine: "리본은 진지하다."
+      stickerLines: [
+        { en: "Eek! Did you hurt your finger? My skin is a bit rough, I'm so sorry!", ko: "손가락 안 다치셨어요? 제 피부가 좀 거칠어서, 정말 미안합니다!" },
+        { en: "Oh, are you looking at my pink ribbon? I tied it extra neat today!", ko: "제 리본 보시는 건가요? 오늘 특별히 예쁘게 묶었어요!" }
+      ]
     },
     sthildrune: {
       key: "sthildrune",
@@ -2296,7 +2334,10 @@ var DATA = {
         "붉은 모래톱 협곡의 고대 유적을 뒤지는 추적자. 변온동물답게 세상의 모든 감정과 호의를 철저히 '열량'과 '생존 연료'로만 환산하는 극단적 실용주의자다. 낮에는 뜨거운 바위 위에서 꼼짝 않고 햇볕을 쬐며 에너지를 충전하고, 해가 지면 주변에서 가장 따뜻한 모닥불이나 남의 침낭 속으로 일말의 망설임도 없이 기어들어 간다. 당하는 입장에선 심장이 멎을 노릇이지만, 본인 딴에는 추워 죽기 싫어서 난로 옆에 붙은 것뿐이니 오해는 금물.",
         "말수는 적고 태도는 퉁명스러운데, 가끔 사냥감을 툭 던져주거나 추운 날 곁을 내어주는 투박한 방식이 그녀 나름의 최선이다. 최근 하늘 위에서 누군가 자꾸 자신을 훔쳐보는 것 같아 은근히 신경 쓰인다고…"
       ],
-      stickerLine: "오해는 금물."
+      stickerLines: [
+        { en: "Your fingertip is warm. Do that again.", ko: "손끝이 따뜻하네. 한 번 더 해." },
+        { en: "Stop poking. Either share your body heat or leave.", ko: "찌르지 마. 체온을 나누든지, 꺼지든지." }
+      ]
     },
     grebuiftee: {
       key: "grebuiftee",
@@ -2312,7 +2353,10 @@ var DATA = {
         "크로스로드 명물 선술집의 주인장이자 전설의 은퇴 용병. 키는 아담하지만 가게에서 행패를 부리는 취객을 식칼 손잡이나 술통째로 날려버린 뒤 수리비까지 알뜰하게 받아내는 살아있는 재앙이다. 다친 손님이 들어오면 \"어느 멍청이한테 얻어터졌냐\"며 걸걸하게 욕을 퍼부으면서도, 김이 모락모락 나는 뜨끈한 스튜와 독주를 제일 먼저 내어주는 전형적인 츤데레.",
         "본인은 화려한 현역 시절을 미련 없이 접었다고 큰소리치지만, 영업이 끝나고 불 꺼진 화로 앞에서 삐걱거리는 관절을 묵묵히 주무르는 뒷모습을 본 단골들은 안다. 그녀가 아직도 녹슬고 싶지 않아 손님들 뒤치다꺼리에 목숨을 건다는 걸……"
       ],
-      stickerLine: "어느 멍청이한테 얻어터졌냐."
+      stickerLines: [
+        { en: "Quit poking the barkeep and order a drink, kid. Tabs ain't free.", ko: "주인장 그만 찔러대고 술이나 시켜, 애송아. 외상은 공짜가 아냐." },
+        { en: "Got time to tap around? Sit down and finish your stew before it freezes.", ko: "손가락 놀릴 시간은 있어? 식기 전에 앉아서 스튜나 마저 먹거라." }
+      ]
     },
     zitoth: {
       key: "zitoth",
@@ -2328,7 +2372,10 @@ var DATA = {
         "크로스로드 성문을 380년째 묵묵히 지키는 거대 수비대장. 비바람이 몰아치든 폭설이 내리든 며칠이고 미동도 없이 서 있는 바람에, 초행길 여행자들은 그녀를 성벽 장식용 조각상으로 착각하고 짐을 기대 놓곤 한다. 스스로를 영혼 있는 생명체보다는 시에서 관리하는 '방어 시설'쯤으로 여기는지, 어깨에 초록 이끼가 수북이 끼고 관절에서 돌 갈리는 소리가 나도 당연한 노후화라며 신경조차 안 쓴다.",
         "무뚝뚝한 표정으로 던지는 썰렁한 아재 개그가 은근한 매력 포인트! 평소엔 바위처럼 꿈쩍도 안 하지만, 누군가 어깨의 이끼를 떼어주거나 돌 피부에 광택제를 발라주면 거대한 돌꼬리로 바닥을 툭툭 두드린다는 귀여운 소문이 있다."
       ],
-      stickerLine: "장식용이 아니다."
+      stickerLines: [
+        { en: "Careful. You will chip a nail on granite.", ko: "조심해. 화강암이라 손톱 부러져." },
+        { en: "Are you scraping off my moss? ...Do not stop.", ko: "어깨의 이끼를 떼어주는 건가? ...멈추지 마." }
+      ]
     }
   },
   archive: [
@@ -3013,7 +3060,7 @@ var DATA = {
         "</div>" +
         '<button type="button" class="stamp" aria-label="인장 스티커">' +
           '<span class="stamp-photo"><img class="sticker" alt="' + escapeHtml(c.name) + '"></span>' +
-          '<span class="bubble">' + escapeHtml(c.stickerLine || "") + "</span>" +
+          '<span class="bubble">' + stickerBubble(c.stickerLines) + "</span>" +
         "</button>" +
       "</div>" +
       '<div class="identity">' +
@@ -3062,8 +3109,21 @@ var DATA = {
     });
   }
 
+  function stickerBubble(lines) {
+    return (lines || []).map(function (line) {
+      return '<span class="bubble-line" hidden><span class="bubble-en">&ldquo;' + escapeHtml(line.en || "") + '&rdquo;</span><span class="bubble-ko">' + escapeHtml(line.ko || "") + "</span></span>";
+    }).join("");
+  }
+
   function bounceStamp(stamp) {
     var bubble = stamp.querySelector(".bubble");
+    var lines = stamp.querySelectorAll(".bubble-line");
+    var next = 0;
+    lines.forEach(function (line, index) {
+      if (!line.hidden) next = (index + 1) % lines.length;
+      line.hidden = true;
+    });
+    if (lines.length) lines[next].hidden = false;
     stamp.classList.remove("is-boing");
     void stamp.offsetWidth;
     stamp.classList.add("is-boing");
@@ -3071,7 +3131,7 @@ var DATA = {
     clearTimeout(bubbleTimer);
     bubbleTimer = setTimeout(function () {
       if (bubble) bubble.classList.remove("is-on");
-    }, 2600);
+    }, 4600);
   }
 
   function setTab(name) {
